@@ -1,0 +1,164 @@
+/* Programmer: Jizelle Casia            Date: June 30, 2023
+Year and Section: BSIT 1-2                                  */
+
+// Sample program for basic C# elements in Main() method: Bidding Scenario (Version 1)
+
+// to add: in bidding 1, make someone a higher bidder 
+// also, create a fixed incentive increase for the bidders. the higher the bid the greater the incentive
+
+using System;
+
+namespace ProgramExample
+{
+    class BasicElements
+    {
+        static void Main( )
+        {
+          // declaring variables for integers, int only stores whole integers
+          int x; // declaration
+          x = 666; // initialization
+          int y= 777; // declaration + initialization
+          int z = x + y; // arithmetic operation
+
+          // program statements
+          Console.Write( "Your seat number is " + x + ". "); 
+          Console.WriteLine("His seat number is " + y + ".");
+          Console.WriteLine(z + " is your table number.");
+          Console.Write("It is cool that your table number is " + z + ", ");
+          Console.WriteLine("because " + x + " and " + y + " is " + z + ".");
+
+          // asking user input + declaring variables
+          Console.Write( "Type your name: "); 
+          String Name = Console.ReadLine();
+          Console.Write( "Type your age: "); 
+          double Age = Convert.ToDouble(Console.ReadLine()); // convertion because Age is read as a string first so we have to convert it to double
+
+          // variables for boolean
+          Console.Write("Are you alive? Type 'true' if YES and 'false' if NO: ");
+          bool Alive = Convert.ToBoolean(Console.ReadLine()); // true or false only
+            // if-else condition
+            if (Alive)
+              {
+                  Console.WriteLine("Status: Alive");
+              }
+            else
+              {
+                  Console.WriteLine("Status: Dead");
+              }
+
+          // variables for single characters
+          char Symbol = '@'; // only enclosed in single quotes
+
+          // variables for strings of characters, enclosed in double quotes
+          String UserName = Symbol + "Phoenix"; // combining characters
+
+          // constants = "immutable" which means you cannot change value for the rest of the program
+          const double StartingBid1 = 50000;
+
+          // variables for double numbers 
+          /* double stores decimals of approx 15 decimal digits unlike 
+          float who can only store decimals of approx 7 digits */
+          double NewAge = Age / 2;
+          double StartingMoney = 100000;
+
+          // next part of program statements
+          Console.WriteLine("Your age is currently " + Age + ". But in this household you will use half your age, you are now " + NewAge + ".");
+          Console.WriteLine("Press any key to proceed...");
+          Console.ReadKey(); // temporarily pause program execution when read by compiler
+          Console.Beep(); // beep sound
+          Console.Beep();
+          Console.Beep();
+          Console.WriteLine("That is the sound of the auction motioning to start. \nA tablet-sized hologram appeared in front of you.");
+          Console.WriteLine("\tThe screen says, \'Are you alive? " + Alive + "\' \nA symbol then appeared on the screen: " + Symbol);
+          Console.WriteLine("Press any key to proceed...");
+          Console.ReadKey();
+          Console.WriteLine("\t\'Your name is " + Name + ". In this household, you will be named Phoenix.\'");
+          Console.WriteLine("\t'Hello " + UserName + ",\n\t\tAccording to your account, your beginning money is Php " + StartingMoney + ". The first showcase collection is to be auctioned for a starting bid of " + StartingBid1 + " pesos for all items.'");
+          Console.WriteLine("A female voice sounded all over the massive hall. \"Ladies and gentlemen, welcome!\" She made a short introduction of tonight's auction. \"...Without further ado, the first item for tonight's first collection is a limited-edition golden tumbler from the Overworld, dating back to 2023. This tumbler holds immense historical value and is sought after by collectors worldwide. Bidding is now open!\"");
+          Console.WriteLine("You look at the magnificent tumbler from your own hologram screen. A text is embedded on the side of the tumbler. 'Aquaflask', it says. The item ID is 0001.");
+          Console.WriteLine("Press any key to proceed...");
+          Console.ReadKey();
+
+          // "first bidding"
+          Console.Write("\t\'Do you want to bid for the item? (Type '1' if Yes and '0' if No): ");
+          String UpForBid = Console.ReadLine(); 
+          double Item0001 = StartingBid1;
+          // while statement
+          while (UpForBid == "1") 
+          {
+            Console.Write("\tEnter your Bid or Type '0' to Stop Bidding: ");
+            double MyBid1 = Convert.ToDouble(Console.ReadLine());
+              if (MyBid1 == 0)
+                {
+                  Console.WriteLine("You decide not to bid.");
+                  Console.WriteLine("The host announced, \"We have multiple bidders sending their bids in the database now. The highest bidder is from table 1443, entering the bid with an amount of Php 70,000.\"");
+                  Console.WriteLine("\t\"Item 0001 is now worth Php " + Item0001 + ". Who wants to up the bid?\" \nThe auction went on until Item 0001 was sold to user @SwiftFox of Table 3388 for Php 120,000. The System announced it for everyone.");
+                  Console.WriteLine("Press any key to proceed...");
+                  Console.ReadKey();
+                  Console.Beep();
+                  Console.WriteLine("\t\'System: Congratulations! Item 0001 was sold to User @SwiftFox for Php 120,000, the first highest bidder. \nThey will receive an incentive of Php 50,000 and all bidders from @SwiftFox's table will receive Php20,000 incentives each.\'");
+                  StartingMoney += 20000;
+                  Console.WriteLine("Consequently you receive another message from your screen.");
+                  Console.WriteLine("Press any key to proceed...");
+                  Console.ReadKey();
+                  Console.Beep();
+                  Console.WriteLine("\t\'Hello " + UserName + ",\n\t\tYou received Php 20,000 in your account. Your money is now Php " + StartingMoney + ".\'");
+                  break;
+                }
+              else if (MyBid1 <= Item0001)
+                {
+                  Console.WriteLine("\t\'Your bid must be higher than Php " + Item0001 + " (Current highest bid).\'");
+                }
+              else if (MyBid1 > StartingMoney)
+                {
+                  Console.WriteLine("\t\'You cannot bid more than what you have. Your balance is " + StartingMoney + ".\'");
+                }
+              else
+                {
+                  Console.WriteLine("\t\'You bid Php " + MyBid1 + ".\'");
+                  Item0001 = MyBid1;
+                  Console.WriteLine("The host announced, \"We have multiple bidders sending their bids in the database now. The highest bidder is from table 1443, entering the bid with an amount of Php " + MyBid1 + ". Who wants to up the price?\"");
+                  Console.WriteLine("Other bidders started to enter their prices but you remained the highest bidder. \"Going once, going twice...Sold to the highest bidder from table 1443!\"");
+                  Console.WriteLine("You are the highest bidder. The System announced it to everyone.");
+                  Console.WriteLine("Press any key to proceed...");
+                  Console.ReadKey();
+                  Console.Beep();
+                  Console.WriteLine("\t\'System: Congratulations! Item 0001 was sold to User " + UserName + ", the first highest bidder, for Php " + Item0001 + ". \nThey will receive an incentive of Php 20,000 and all bidders from @Phoenix's table will receive Php10,000 incentives each.\'");
+                  double NewBalance= StartingMoney - MyBid1 + 30000;
+                  Console.WriteLine("Consequently, you receive another message from your screen. \n\t\'Hello " + UserName + ",\n\t\tYou received Php 30,000 incentive in your account. Your balance is now Php " + NewBalance + ". Item 001 is beginning its transfer to your account. For verification, please type your age below.\'");
+                  while (true)
+                  {
+                   Console.Write("\t\'UserName: @Phoenix \n\tAge:\' ");
+                   double EnterYourAge = Convert.ToDouble(Console.ReadLine());
+                    if (EnterYourAge == NewAge)
+                      {
+                        Console.Beep();
+                        Console.WriteLine("\n\t\'Congratulations! You have successfully claimed Item 0001 and it is now moved into your account inventory.\'");
+                        break;
+                      }
+                    else
+                      {
+                        Console.WriteLine("You are not ineligible to claim the item.");
+                      }
+                  }
+                  break;
+                }
+          }
+          while (UpForBid == "0")
+            {
+              Console.WriteLine("You decide not to bid.");
+              Console.WriteLine("The host announced, \"We have multiple bidders sending their bids in the database now. The highest bidder is from table 1443, entering the bid with an amount of Php 70,000.\"");
+              Console.WriteLine("\t\"Item 0001 is now worth Php " + Item0001 + ". Who wants to up the bid?\" \nThe auction went on until Item 0001 was sold to user @SwiftFox of Table 3388 for Php 120,000. The System announced it for everyone.");
+              Console.WriteLine("\t\'System: Congratulations! Item 0001 was sold to User @SwiftFox for Php 120,000, the first highest bidder. \nThey will receive an incentive of Php 50,000 and all bidders from @SwiftFox's table will receive Php20,000 incentives each.\'");
+              StartingMoney += 20000;
+              Console.WriteLine("Consequently you receive another message from your screen."); 
+              Console.WriteLine("Press any key to proceed...");
+              Console.ReadKey();
+              Console.Beep();
+              Console.WriteLine("\t\'Hello " + UserName + ",\n\t\tYou received Php 20,000 in your account. Your money is now Php " + StartingMoney + ".\'");
+              break;
+            }
+            Console.WriteLine("The first bidding ended."); // "first bidding" end
+        }
+    }
+}

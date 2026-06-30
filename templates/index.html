@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html class="bg-black">
+<head>
+    <style>
+        /* Reset everything to ensure we start from a clean slate */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html, body {
+            width: 100vw;
+            height: 100vh;
+            background-color: black;
+            overflow: hidden;
+            position: relative; /* This defines the 'boundary' for your stars */
+        }
+
+        .star {
+            z-index: 1; /* lowest */
+            position: absolute;
+            color: white;
+            font-family: monospace;
+            font-size: 1.2rem;
+            pointer-events: none;
+        }
+
+        .dimmer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.6); /* 0.6 represents 60% opacity */
+            z-index: 2; /* dimmer filter */
+            pointer-events: none; /* Allows clicks to pass through to your UI */
+        }
+
+        .bidding-ui {
+            position: relative;
+            z-index: 3; /* Highest: Text will be crisp and bright */
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="dimmer"></div>
+    {% for star in stars %}
+     <div class="star" data-left="{{ (star.x / 80) * 100 }}" data-top="{{ (star.y / 20) * 100 }}">{{ star.char }}</div>
+    {% endfor %}
+
+    <div class="bidding-ui">
+        <h2>Auction Terminal</h2>
+        <form action="/bid" method="post">
+            <label>Bidder Name:</label>
+            <input type="text" name="bidder" required>
+            
+            <label>Bid Amount:</label>
+            <input type="number" name="amount" required>
+            
+            <button type="submit">Place Bid</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.star').forEach((star) => {
+                const left = star.getAttribute('data-left');
+                const top = star.getAttribute('data-top');
+
+                if (left !== null) {
+                    star.style.left = `${left}%`;
+                }
+
+                if (top !== null) {
+                    star.style.top = `${top}%`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
