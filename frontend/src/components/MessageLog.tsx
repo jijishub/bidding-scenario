@@ -6,9 +6,9 @@ interface Props {
   onTypingComplete: (msg: string) => void
 }
 
-const CHAR_MS = 14
-const FAST_CHAR_MS = 6
-const PAUSE_MS = 90
+const CHAR_MS = 20
+const FAST_CHAR_MS = 20
+const PAUSE_MS = 100
 
 type Kind = 'system' | 'error' | 'dialog' | 'narrative'
 
