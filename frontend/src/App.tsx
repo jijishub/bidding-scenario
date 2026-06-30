@@ -12,12 +12,16 @@ export default function App() {
   const [inputActive, setInputActive] = useState(false)
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // Holds the input config and done flag that should activate once typing drains
   const pendingInput = useRef<InputConfig | null>(null)
   const pendingDone = useRef(false)
+  // Prevents the StrictMode double-mount from firing two createSession calls
+  const initiated = useRef(false)
 
   useEffect(() => {
+    if (initiated.current) return
+    initiated.current = true
     startSession()
   }, [])
 
@@ -33,7 +37,6 @@ export default function App() {
       return
     }
 
-    // Queue empty — reveal input
     if (pendingInput.current) {
       setInputConfig(pendingInput.current)
       setInputActive(true)
@@ -47,13 +50,13 @@ export default function App() {
   }, [])
 
   function applyResponse(resp: StepResponse) {
+    setError(null)
     setSessionId(resp.session_id)
     pendingInput.current = resp.input
     pendingDone.current = resp.done
     setInputActive(false)
 
     if (resp.messages.length === 0) {
-      // No messages to animate — activate input immediately
       setInputConfig(resp.input)
       setInputActive(true)
       setDone(resp.done)
@@ -63,7 +66,7 @@ export default function App() {
   }
 
   async function startSession() {
-    // Reset all state
+    initiated.current = true
     setDisplayedMessages([])
     setTypingQueue([])
     setCurrentlyTyping(null)
@@ -71,6 +74,7 @@ export default function App() {
     setInputActive(false)
     setDone(false)
     setSessionId(null)
+    setError(null)
     pendingInput.current = null
     pendingDone.current = false
 
@@ -78,6 +82,11 @@ export default function App() {
     try {
       const resp = await createSession()
       applyResponse(resp)
+    } catch (e) {
+      setError(
+        'Cannot reach the backend. Make sure the FastAPI server is running on port 8000.\n' +
+        String(e),
+      )
     } finally {
       setLoading(false)
     }
@@ -90,6 +99,9 @@ export default function App() {
     try {
       const resp = await sendStep(sessionId, value)
       applyResponse(resp)
+    } catch (e) {
+      setError('Network error: ' + String(e))
+      setInputActive(true)
     } finally {
       setLoading(false)
     }
@@ -104,6 +116,7 @@ export default function App() {
       onInput={handleInput}
       loading={loading}
       done={done}
+      error={error}
       onRestart={startSession}
     />
   )

@@ -11,6 +11,7 @@ interface Props {
   onInput: (value: string) => void
   loading: boolean
   done: boolean
+  error: string | null
   onRestart: () => void
 }
 
@@ -22,6 +23,7 @@ export default function Teleprompter({
   onInput,
   loading,
   done,
+  error,
   onRestart,
 }: Props) {
   return (
@@ -101,11 +103,35 @@ export default function Teleprompter({
 
         {/* Message viewport */}
         <div style={{ padding: '20px 24px', minHeight: 300 }}>
-          <MessageLog
-            messages={displayedMessages}
-            currentlyTyping={currentlyTyping}
-            onTypingComplete={onTypingComplete}
-          />
+          {error ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <p style={{ color: '#f87171', fontSize: 13, whiteSpace: 'pre-wrap', margin: 0 }}>
+                {error}
+              </p>
+              <button
+                onClick={onRestart}
+                style={{
+                  alignSelf: 'flex-start',
+                  padding: '7px 18px',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontFamily: 'inherit',
+                  background: 'rgba(248,113,113,0.1)',
+                  border: '1px solid rgba(248,113,113,0.35)',
+                  color: '#f87171',
+                  cursor: 'pointer',
+                }}
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <MessageLog
+              messages={displayedMessages}
+              currentlyTyping={currentlyTyping}
+              onTypingComplete={onTypingComplete}
+            />
+          )}
         </div>
 
         {/* Separator */}

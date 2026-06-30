@@ -7,8 +7,8 @@ interface Props {
 }
 
 const CHAR_MS = 14
-const FAST_CHAR_MS = 6    // long messages type faster
-const PAUSE_MS = 90       // gap between messages
+const FAST_CHAR_MS = 6
+const PAUSE_MS = 90
 
 type Kind = 'system' | 'error' | 'dialog' | 'narrative'
 
@@ -68,58 +68,54 @@ function MessageLine({ text, cursor = false }: { text: string; cursor?: boolean 
   )
 }
 
+// Bundles the active message and its current character index together so
+// a message change ALWAYS resets to idx=0 — avoids the stale-charIndex
+// no-op that occurs when charIndex is already 0 on the first frame.
+interface TypingState {
+  msg: string
+  idx: number
+}
+
 export default function MessageLog({ messages, currentlyTyping, onTypingComplete }: Props) {
   const [typedText, setTypedText] = useState('')
-  const [charIndex, setCharIndex] = useState(0)
-  const activeMsg = useRef<string | null>(null)   // which message is being animated
+  const [typingState, setTypingState] = useState<TypingState | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  // Single effect handles both reset-on-new-message and character advancement.
-  // Using a ref (activeMsg) avoids the two-effect ordering race where the old
-  // charIndex could fire onTypingComplete for the newly arrived message.
+  // When the parent hands us a new message, reset typing state to index 0.
   useEffect(() => {
     if (currentlyTyping === null) {
-      activeMsg.current = null
-      return
-    }
-
-    // New message arrived — reset and let the next render start at char 0
-    if (activeMsg.current !== currentlyTyping) {
-      activeMsg.current = currentlyTyping
+      setTypingState(null)
       setTypedText('')
-      setCharIndex(0)
-      return
+    } else {
+      setTypingState({ msg: currentlyTyping, idx: 0 })
     }
+  }, [currentlyTyping])
 
-    // Typing complete — pause then notify parent
-    if (charIndex >= currentlyTyping.length) {
-      const t = setTimeout(() => onTypingComplete(currentlyTyping), PAUSE_MS)
+  // Advance one character per tick, driven entirely by typingState.
+  useEffect(() => {
+    if (typingState === null) return
+    const { msg, idx } = typingState
+
+    if (idx >= msg.length) {
+      const t = setTimeout(() => onTypingComplete(msg), PAUSE_MS)
       return () => clearTimeout(t)
     }
 
-    // Advance one character
-    const speed = currentlyTyping.length > 100 ? FAST_CHAR_MS : CHAR_MS
+    const speed = msg.length > 100 ? FAST_CHAR_MS : CHAR_MS
     const t = setTimeout(() => {
-      setTypedText(currentlyTyping.slice(0, charIndex + 1))
-      setCharIndex((i) => i + 1)
+      setTypedText(msg.slice(0, idx + 1))
+      setTypingState({ msg, idx: idx + 1 })
     }, speed)
     return () => clearTimeout(t)
-  }, [currentlyTyping, charIndex, onTypingComplete])
+  }, [typingState, onTypingComplete])
 
-  // Keep the latest line in view
+  // Keep newest line visible
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages.length, typedText])
 
   return (
-    <div
-      style={{
-        maxHeight: 340,
-        overflowY: 'auto',
-        paddingRight: 4,
-        scrollbarWidth: 'none',
-      }}
-    >
+    <div style={{ maxHeight: 340, overflowY: 'auto', paddingRight: 4, scrollbarWidth: 'none' }}>
       {messages.map((msg, i) => (
         <MessageLine key={i} text={msg} />
       ))}
