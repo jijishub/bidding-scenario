@@ -23,7 +23,7 @@ app = FastAPI(title="BiddingScenario API", version="2.0", lifespan=lifespan)
 
 _ORIGINS = os.getenv(
     "ALLOWED_ORIGINS",
-    "http://localhost:5173,http://localhost:4173",
+    "http://localhost:5173,http://localhost:5174,http://localhost:4173",
 ).split(",")
 
 app.add_middleware(
@@ -65,7 +65,7 @@ def step_session(session_id: str, body: StepRequest):
     if session is None:
         raise HTTPException(status_code=404, detail="Session not found")
 
-    msgs, input_cfg = process_step(session, body.value)
+    msgs, input_cfg, actions = process_step(session, body.value)
     save_session(session)
 
     return StepResponse(
@@ -73,5 +73,6 @@ def step_session(session_id: str, body: StepRequest):
         messages=msgs,
         input=input_cfg,
         state=session.state,
+        actions=actions,
         done=session.state in ("WON", "ENDED"),
     )

@@ -13,9 +13,15 @@ export interface InputConfig {
   options?: string[]
 }
 
+export interface MessagePart {
+  text: string
+  color?: string
+}
+
 export interface Message {
   text: string
   color?: string
+  parts?: MessagePart[]
 }
 
 export interface StepResponse {
@@ -23,5 +29,6 @@ export interface StepResponse {
   messages: (string | Message)[]
   input: InputConfig
   state: string
+  actions?: string[]
   done: boolean
 }

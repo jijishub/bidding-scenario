@@ -12,10 +12,17 @@ class InputConfig(BaseModel):
     options: Optional[List[str]] = None
 
 
-class Message(BaseModel):
-    """Message can be plain string or object with text and optional color."""
+class MessagePart(BaseModel):
     text: str
     color: Optional[str] = None
+
+
+class Message(BaseModel):
+    """Message can be plain string, object with text and optional color,
+    or made of multiple differently-colored parts on the same line."""
+    text: str = ""
+    color: Optional[str] = None
+    parts: Optional[List[MessagePart]] = None
 
 
 class StepRequest(BaseModel):
@@ -27,4 +34,5 @@ class StepResponse(BaseModel):
     messages: List[Union[str, Message]]
     input: InputConfig
     state: str
+    actions: List[str] = []
     done: bool = False

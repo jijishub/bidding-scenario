@@ -13,6 +13,7 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [actions, setActions] = useState<string[]>([])
 
   const pendingInput = useRef<InputConfig | null>(null)
   const pendingDone = useRef(false)
@@ -55,9 +56,38 @@ export default function App() {
     setCurrentlyTyping(null)
   }, [])
 
+  // Handle actions from the backend (e.g., beep sounds)
+  useEffect(() => {
+    if (actions.includes('play_beep_3x')) {
+      // Play beep sound 3 times using Web Audio API
+      const playBeep = () => {
+        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+        const oscillator = audioContext.createOscillator()
+        const gainNode = audioContext.createGain()
+
+        oscillator.connect(gainNode)
+        gainNode.connect(audioContext.destination)
+
+        oscillator.frequency.value = 800 // Hz
+        oscillator.type = 'sine'
+
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1)
+
+        oscillator.start(audioContext.currentTime)
+        oscillator.stop(audioContext.currentTime + 0.1)
+      }
+
+      for (let i = 0; i < 3; i++) {
+        setTimeout(() => playBeep(), i * 400)
+      }
+    }
+  }, [actions])
+
   function applyResponse(resp: StepResponse) {
     setError(null)
     setSessionId(resp.session_id)
+    setActions(resp.actions || [])
     pendingInput.current = resp.input
     pendingDone.current = resp.done
     setInputActive(false)

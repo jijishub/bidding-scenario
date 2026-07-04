@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Tuple, Union
 
-from .models import InputConfig, Message
+from .models import InputConfig, Message, MessagePart
 
 STARTING_BID = 50_000.0
 STARTING_MONEY = 100_000.0
@@ -57,8 +57,8 @@ def start_session(session: SessionData) -> Tuple[List[str], InputConfig]:
     )
 
 
-def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConfig]:
-    """Process one user input, mutate session in-place, return (messages, next_input)."""
+def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Message]], InputConfig, List[str]]:
+    """Process one user input, mutate session in-place, return (messages, next_input, actions)."""
     v = value.strip()
 
     # ── Name ──────────────────────────────────────────────────────────────────
@@ -67,10 +67,11 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
             return (
                 ["Please enter a name."],
                 InputConfig(type="text", label="Type your name:", placeholder="Your name..."),
+                [],
             )
         session.name = v
         session.state = "AGE_INPUT"
-        return [], InputConfig(type="number", label="Type your age:", placeholder="Type your age...")
+        return [], InputConfig(type="number", label="Type your age:", placeholder="Type your age..."), []
 
     # ── Age ───────────────────────────────────────────────────────────────────
     if session.state == "AGE_INPUT":
@@ -81,13 +82,14 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
             return (
                 ["Please enter a valid number for your age."],
                 InputConfig(type="number", label="Type your age:", placeholder="Type your age..."),
+                [],
             )
         session.state = "ALIVE_INPUT"
         return [], InputConfig(
             type="choice",
             label="Are you alive?",
             options=["true — Yes, I am alive", "false — No, I am dead"],
-        )
+        ), []
 
     # ── Alive ─────────────────────────────────────────────────────────────────
     if session.state == "ALIVE_INPUT":
@@ -104,6 +106,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                 ),
             ],
             InputConfig(type="continue", label="Press any key to proceed..."),
+            [],
         )
 
     # ── Story beat 1 — beep × 3, hologram appears ─────────────────────────────
@@ -113,10 +116,23 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
             [
                 "That is the sound of the auction motioning to start.",
                 "A tablet-sized hologram appeared in front of you.",
-                Message(text=f"\tThe screen says,'Are you alive? {str(session.alive).lower()}'", color="white"),
-                Message(text="\n\tA symbol then appeared on the screen: @", color="white"),
+                Message(
+                    text=f"\tThe screen says,'Are you alive? {str(session.alive).lower()}'",
+                    parts=[
+                        MessagePart(text="\tThe screen says,", color="#67e8f9"),
+                        MessagePart(text=f"'Are you alive? {str(session.alive).lower()}'", color="white"),
+                    ],
+                ),
+                Message(
+                    text="\n\tA symbol then appeared on the screen: @",
+                    parts=[
+                        MessagePart(text="\n\tA symbol then appeared on the screen: ", color="#67e8f9"),
+                        MessagePart(text="@", color="white"),
+                    ],
+                ),
             ],
             InputConfig(type="continue", label="Press any key to proceed..."),
+            ["play_beep_3x"],
         )
 
     # ── Story beat 2 — name reveal, item announcement ─────────────────────────
@@ -164,6 +180,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                 label="What would you like to do during the break?",
                 options=["1 — Check balance", "2 — Check inventory", "0 — Continue"],
             ),
+            [],
         )
     
     #Inventory checker
@@ -173,19 +190,19 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
             return [], InputConfig(
                 type="continue",
                 label=f"Your current balance is Php {_fmt(session.new_balance)}. Press any key to continue...",
-            )
+            ), []
         if v.startswith("2"):
             session.state = "CHECK_INVENTORY"
             return [], InputConfig(
                 type="continue",
                 label="Checking your inventory. Press any key to continue...",
-            )
+            ), []
         if v.startswith("0"):
             session.state = "STORY_PAUSE_4"
             return [], InputConfig(
                 type="continue",
                 label="You chose to continue without checking your balance. Press any key to proceed...",
-            )
+            ), []
         return (
             ["Please select 1 (Check balance), 2 (Check inventory), or 0 (Continue)."],
             InputConfig(
@@ -193,6 +210,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                 label="What would you like to do during the break?",
                 options=["1 — Check balance", "2 — Check inventory", "0 — Continue"],
             ),
+            [],
         )
 
     # ── Bid choice ────────────────────────────────────────────────────────────
@@ -203,9 +221,10 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                 type="number",
                 label="Enter your Bid, or type 0 to stop bidding:",
                 placeholder=f"Must exceed {_fmt(session.item_price)}",
-            )
+            ), []
         if v.startswith("0"):
-            return _loss_outcome(session)
+            msgs, inp = _loss_outcome(session)
+            return msgs, inp, []
         return (
             ["Please select 1 (Yes) or 0 (No)."],
             InputConfig(
@@ -213,6 +232,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                 label="Do you want to bid for the item?",
                 options=["1 — Yes, I want to bid", "0 — No, skip this item"],
             ),
+            [],
         )
 
     # ── Bidding loop ──────────────────────────────────────────────────────────
@@ -227,10 +247,12 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                     label="Enter your Bid, or type 0 to stop bidding:",
                     placeholder=f"Must exceed {_fmt(session.item_price)}",
                 ),
+                [],
             )
 
         if bid == 0:
-            return _loss_outcome(session)
+            msgs, inp = _loss_outcome(session)
+            return msgs, inp, []
 
         if bid <= session.item_price:
             return (
@@ -240,6 +262,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                     label="Enter your Bid, or type 0 to stop bidding:",
                     placeholder=f"Must exceed {_fmt(session.item_price)}",
                 ),
+                [],
             )
 
         if bid > session.balance:
@@ -250,6 +273,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                     label="Enter your Bid, or type 0 to stop bidding:",
                     placeholder=f"Must exceed {_fmt(session.item_price)}",
                 ),
+                [],
             )
 
         # Valid bid — check if the competitor can counter
@@ -276,6 +300,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                     label="Enter your Bid, or type 0 to stop bidding:",
                     placeholder=f"Must exceed {_fmt(session.item_price)}",
                 ),
+                [],
             )
 
         # Competitor cannot match — player wins
@@ -297,6 +322,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                 "You are the highest bidder. The System announced it to everyone.",
             ],
             InputConfig(type="continue", label="Press any key to proceed..."),
+            [],
         )
 
     # ── Win pause — key press before final win messages ───────────────────────
@@ -323,6 +349,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                 label="UserName: @Phoenix  ·  Verification — Enter your age:",
                 placeholder="Your age...",
             ),
+            [],
         )
 
     # ── Age verification ──────────────────────────────────────────────────────
@@ -333,6 +360,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
             return (
                 ["Invalid input. Please enter a number."],
                 InputConfig(type="number", label="Verification — Enter your age:", placeholder="Your age..."),
+                [],
             )
         if entered == session.half_age:
             session.state = "BID_BREAK"
@@ -351,10 +379,12 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                     label="What would you like to do during the break?",
                     options=["1 — Check balance", "2 — Check inventory", "0 — Continue"],
                 ),
+                [],
             )
         return (
             ["You are not ineligible to claim the item."],
             InputConfig(type="number", label="Verification — Enter your age:", placeholder="Your age..."),
+            [],
         )
 
     # ── Loss pause — key press before final loss messages ────────────────────
@@ -377,16 +407,17 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                 label="What would you like to do during the break?",
                 options=["1 — Check balance", "2 — Check inventory", "0 — Continue"],
             ),
+            [],
         )
 
     # ── Terminal states ───────────────────────────────────────────────────────
     if session.state in ("WON", "ENDED"):
-        return ["The auction has concluded."], InputConfig(type="done", label="Game over.")
+        return ["The auction has concluded."], InputConfig(type="done", label="Game over."), []
 
-    return ["Unknown state. Please start a new session."], InputConfig(type="done")
+    return ["Unknown state. Please start a new session."], InputConfig(type="done"), []
 
 
-def _loss_outcome(session: SessionData) -> Tuple[List[str], InputConfig]:
+def _loss_outcome(session: SessionData) -> Tuple[List[Union[str, Message]], InputConfig, List[str]]:
     """Shared path for 'chose not to bid' and 'typed 0 mid-bid'."""
     session.balance += NO_BID_INCENTIVE
     session.state = "LOSS_PAUSE"
@@ -410,4 +441,5 @@ def _loss_outcome(session: SessionData) -> Tuple[List[str], InputConfig]:
             "Consequently you receive another message from your screen.",
         ],
         InputConfig(type="continue", label="Press any key to proceed..."),
+        [],
     )

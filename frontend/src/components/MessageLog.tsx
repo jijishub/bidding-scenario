@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import type { MessagePart } from '../types'
 
 interface Props {
-  messages: (string | { text: string; color?: string })[]
+  messages: (string | { text: string; color?: string; parts?: MessagePart[] })[]
   currentlyTyping: string | null
   onTypingComplete: (msg: string) => void
 }
@@ -34,7 +35,17 @@ const COLOR: Record<Kind, string> = {
   narrative: '#67e8f9',
 }
 
-function MessageLine({ text, cursor = false, color }: { text: string; cursor?: boolean; color?: string }) {
+function MessageLine({
+  text,
+  cursor = false,
+  color,
+  parts,
+}: {
+  text: string
+  cursor?: boolean
+  color?: string
+  parts?: MessagePart[]
+}) {
   const kind = classify(text)
   const baseStyle: React.CSSProperties = {
     color: color || COLOR[kind],
@@ -48,7 +59,7 @@ function MessageLine({ text, cursor = false, color }: { text: string; cursor?: b
 
   return (
     <p style={baseStyle}>
-      {text}
+      {parts ? parts.map((p, i) => <span key={i} style={{ color: p.color }}>{p.text}</span>) : text}
       {cursor && (
         <span
           style={{
@@ -119,7 +130,8 @@ export default function MessageLog({ messages, currentlyTyping, onTypingComplete
       {messages.map((msg, i) => {
         const text = typeof msg === 'string' ? msg : msg.text
         const color = typeof msg === 'string' ? undefined : msg.color
-        return <MessageLine key={i} text={text} color={color} />
+        const parts = typeof msg === 'string' ? undefined : msg.parts
+        return <MessageLine key={i} text={text} color={color} parts={parts} />
       })}
       {currentlyTyping !== null && <MessageLine text={typedText} cursor />}
       <div ref={bottomRef} />
