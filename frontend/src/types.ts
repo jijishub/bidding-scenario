@@ -13,9 +13,14 @@ export interface InputConfig {
   options?: string[]
 }
 
+export interface Message {
+  text: string
+  color?: string
+}
+
 export interface StepResponse {
   session_id: string
-  messages: string[]
+  messages: (string | Message)[]
   input: InputConfig
   state: string
   done: boolean

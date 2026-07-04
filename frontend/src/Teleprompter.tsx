@@ -1,10 +1,10 @@
 import StarField from './components/StarField'
 import MessageLog from './components/MessageLog'
 import InputArea from './components/InputArea'
-import type { InputConfig } from './types'
+import type { InputConfig, Message } from './types'
 
 interface Props {
-  displayedMessages: string[]
+  displayedMessages: (string | Message)[]
   currentlyTyping: string | null
   onTypingComplete: (msg: string) => void
   inputConfig: InputConfig | null

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 interface Props {
-  messages: string[]
+  messages: (string | { text: string; color?: string })[]
   currentlyTyping: string | null
   onTypingComplete: (msg: string) => void
 }
@@ -34,20 +34,20 @@ const COLOR: Record<Kind, string> = {
   narrative: '#67e8f9',
 }
 
-function MessageLine({ text, cursor = false }: { text: string; cursor?: boolean }) {
+function MessageLine({ text, cursor = false, color }: { text: string; cursor?: boolean; color?: string }) {
   const kind = classify(text)
+  const baseStyle: React.CSSProperties = {
+    color: color || COLOR[kind],
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-word',
+    fontSize: 13,
+    lineHeight: 1.65,
+    margin: '4px 0',
+    fontFamily: 'inherit',
+  }
+
   return (
-    <p
-      style={{
-        color: COLOR[kind],
-        whiteSpace: 'pre-wrap',
-        wordBreak: 'break-word',
-        fontSize: 13,
-        lineHeight: 1.65,
-        margin: '4px 0',
-        fontFamily: 'inherit',
-      }}
-    >
+    <p style={baseStyle}>
       {text}
       {cursor && (
         <span
@@ -116,9 +116,11 @@ export default function MessageLog({ messages, currentlyTyping, onTypingComplete
 
   return (
     <div style={{ maxHeight: 340, overflowY: 'auto', paddingRight: 4, scrollbarWidth: 'none' }}>
-      {messages.map((msg, i) => (
-        <MessageLine key={i} text={msg} />
-      ))}
+      {messages.map((msg, i) => {
+        const text = typeof msg === 'string' ? msg : msg.text
+        const color = typeof msg === 'string' ? undefined : msg.color
+        return <MessageLine key={i} text={text} color={color} />
+      })}
       {currentlyTyping !== null && <MessageLine text={typedText} cursor />}
       <div ref={bottomRef} />
     </div>

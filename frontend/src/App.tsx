@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Teleprompter from './Teleprompter'
 import { createSession, sendStep } from './api'
-import type { InputConfig, StepResponse } from './types'
+import type { InputConfig, Message, StepResponse } from './types'
 
 export default function App() {
   const [sessionId, setSessionId] = useState<string | null>(null)
-  const [displayedMessages, setDisplayedMessages] = useState<string[]>([])
-  const [typingQueue, setTypingQueue] = useState<string[]>([])
+  const [displayedMessages, setDisplayedMessages] = useState<(string | Message)[]>([])
+  const [typingQueue, setTypingQueue] = useState<(string | Message)[]>([])
   const [currentlyTyping, setCurrentlyTyping] = useState<string | null>(null)
   const [inputConfig, setInputConfig] = useState<InputConfig | null>(null)
   const [inputActive, setInputActive] = useState(false)
@@ -16,6 +16,7 @@ export default function App() {
 
   const pendingInput = useRef<InputConfig | null>(null)
   const pendingDone = useRef(false)
+  const currentMessageObj = useRef<string | Message | null>(null)
   // Prevents the StrictMode double-mount from firing two createSession calls
   const initiated = useRef(false)
 
@@ -33,7 +34,9 @@ export default function App() {
     if (typingQueue.length > 0) {
       const [next, ...rest] = typingQueue
       setTypingQueue(rest)
-      setCurrentlyTyping(next)
+      currentMessageObj.current = next
+      const msgText = typeof next === 'string' ? next : next.text
+      setCurrentlyTyping(msgText)
       return
     }
 
@@ -44,8 +47,11 @@ export default function App() {
     }
   }, [typingQueue, currentlyTyping])
 
-  const handleTypingComplete = useCallback((msg: string) => {
-    setDisplayedMessages((prev) => [...prev, msg])
+  const handleTypingComplete = useCallback(() => {
+    if (currentMessageObj.current) {
+      setDisplayedMessages((prev) => [...prev, currentMessageObj.current!])
+      currentMessageObj.current = null
+    }
     setCurrentlyTyping(null)
   }, [])
 

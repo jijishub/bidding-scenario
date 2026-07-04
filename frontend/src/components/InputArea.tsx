@@ -56,6 +56,59 @@ export default function InputArea({ config, onSubmit, loading, onRestart }: Prop
     if (shouldFocus) setTimeout(() => inputRef.current?.focus(), 60)
   }, [config])
 
+  // Handle keyboard shortcuts for choice buttons
+  useEffect(() => {
+    if (config?.type !== 'choice' || loading) return
+
+    function handleKeyPress(e: globalThis.KeyboardEvent) {
+      if (!config?.options) return
+
+      const options = config.options
+      let index = -1
+      const optionText = options.map(option => option.toLowerCase())
+      const positiveIndex = optionText.findIndex(option =>
+        option.startsWith('true') || option.startsWith('yes') || option.startsWith('1')
+      )
+      const negativeIndex = optionText.findIndex(option =>
+        option.startsWith('false') || option.startsWith('no') || option.startsWith('0')
+      )
+
+      if (e.key === '1') {
+        index = positiveIndex >= 0 && negativeIndex >= 0 ? positiveIndex : 1
+      } else if (e.key === '0') {
+        index = positiveIndex >= 0 && negativeIndex >= 0 ? negativeIndex : 0
+      } else if (e.key === '2') index = 2
+      else if (e.key === '3') index = 3
+      else if (e.key === '4') index = 4
+      else if (e.key === '5') index = 5
+      else if (e.key === '6') index = 6
+      else if (e.key === '7') index = 7
+      else if (e.key === '8') index = 8
+      else if (e.key === '9') index = 9
+
+      if (index >= 0 && index < options.length) {
+        e.preventDefault()
+        onSubmit(options[index])
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [config, loading, onSubmit])
+
+  // Handle keyboard for continue (press any key)
+  useEffect(() => {
+    if (config?.type !== 'continue' || loading) return
+
+    function handleKeyPress(e: globalThis.KeyboardEvent) {
+      e.preventDefault()
+      onSubmit('')
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [config, loading, onSubmit])
+
   function submit() {
     if (loading) return
     onSubmit(value)

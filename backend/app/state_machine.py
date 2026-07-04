@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
-from .models import InputConfig
+from .models import InputConfig, Message
 
 STARTING_BID = 50_000.0
 STARTING_MONEY = 100_000.0
 NO_BID_INCENTIVE = 20_000.0
-WIN_INCENTIVE = 30_000.0  # credited on top of bid deduction (20k item + 10k table)
+
+COMPETITOR_NAME = "@SwiftFox"
+COMPETITOR_MAX = 90_000.0       # SwiftFox will not bid above this amount
+COMPETITOR_INCREMENT = 5_000.0  # SwiftFox always counters by this much above your bid
 
 
 @dataclass
@@ -27,6 +30,18 @@ class SessionData:
 
 def _fmt(n: float) -> str:
     return f"{int(n):,}" if n == int(n) else f"{n:,.2f}"
+
+
+def _calc_incentive(winning_bid: float) -> float:
+    """Tiered incentive: the higher the winning bid, the greater the reward."""
+    if winning_bid <= 65_000:
+        return 10_000.0
+    elif winning_bid <= 80_000:
+        return 20_000.0
+    elif winning_bid <= 90_000:
+        return 30_000.0
+    else:
+        return 40_000.0
 
 
 def start_session(session: SessionData) -> Tuple[List[str], InputConfig]:
@@ -55,7 +70,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
             )
         session.name = v
         session.state = "AGE_INPUT"
-        return [], InputConfig(type="number", label="Type your age:", placeholder="e.g. 20")
+        return [], InputConfig(type="number", label="Type your age:", placeholder="Type your age...")
 
     # ── Age ───────────────────────────────────────────────────────────────────
     if session.state == "AGE_INPUT":
@@ -65,7 +80,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
         except ValueError:
             return (
                 ["Please enter a valid number for your age."],
-                InputConfig(type="number", label="Type your age:", placeholder="e.g. 20"),
+                InputConfig(type="number", label="Type your age:", placeholder="Type your age..."),
             )
         session.state = "ALIVE_INPUT"
         return [], InputConfig(
@@ -76,7 +91,8 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
 
     # ── Alive ─────────────────────────────────────────────────────────────────
     if session.state == "ALIVE_INPUT":
-        session.alive = v.startswith("true")
+        normalized = v.lower()
+        session.alive = normalized.startswith("true") or normalized.startswith("1") or normalized.startswith("yes") or normalized.startswith("alive")
         status = "Alive" if session.alive else "Dead"
         session.state = "STORY_PAUSE_1"
         return (
@@ -97,10 +113,8 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
             [
                 "That is the sound of the auction motioning to start.",
                 "A tablet-sized hologram appeared in front of you.",
-                (
-                    f"\tThe screen says, 'Are you alive? {str(session.alive).lower()}' "
-                    f"\n\tA symbol then appeared on the screen: @"
-                ),
+                Message(text=f"\tThe screen says,'Are you alive? {str(session.alive).lower()}'", color="white"),
+                Message(text="\n\tA symbol then appeared on the screen: @", color="white"),
             ],
             InputConfig(type="continue", label="Press any key to proceed..."),
         )
@@ -132,6 +146,52 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                 type="choice",
                 label="Do you want to bid for the item?",
                 options=["1 — Yes, I want to bid", "0 — No, skip this item"],
+            ),
+        )
+    
+    # ── Story beat 3 - First Bid break ─────────────────────────────────────────────
+    if session.state == "WON" or session.state == "ENDED":
+        session.state = "BID_BREAK"
+        return (
+            [
+                "The host announces that the first bidding is now over.",
+                "We have fifteen minute break before the next bidding starts.",
+                "During this time, you can check your balance and prepare for the next item.",
+                "For those who have acquired inventories, please check your hologram screen for the items you have won.",
+            ],
+            InputConfig(
+                type="choice",
+                label="What would you like to do during the break?",
+                options=["1 — Check balance", "2 — Check inventory", "0 — Continue"],
+            ),
+        )
+    
+    #Inventory checker
+    if session.state == "BID_BREAK":
+        if v.startswith("1"):
+            session.state = "CHECK_BALANCE"
+            return [], InputConfig(
+                type="continue",
+                label=f"Your current balance is Php {_fmt(session.new_balance)}. Press any key to continue...",
+            )
+        if v.startswith("2"):
+            session.state = "CHECK_INVENTORY"
+            return [], InputConfig(
+                type="continue",
+                label="Checking your inventory. Press any key to continue...",
+            )
+        if v.startswith("0"):
+            session.state = "STORY_PAUSE_4"
+            return [], InputConfig(
+                type="continue",
+                label="You chose to continue without checking your balance. Press any key to proceed...",
+            )
+        return (
+            ["Please select 1 (Check balance), 2 (Check inventory), or 0 (Continue)."],
+            InputConfig(
+                type="choice",
+                label="What would you like to do during the break?",
+                options=["1 — Check balance", "2 — Check inventory", "0 — Continue"],
             ),
         )
 
@@ -192,7 +252,33 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                 ),
             )
 
-        # Valid bid
+        # Valid bid — check if the competitor can counter
+        competitor_bid = bid + COMPETITOR_INCREMENT
+
+        if competitor_bid <= COMPETITOR_MAX:
+            # @SwiftFox raises — player must bid again or give up
+            session.item_price = competitor_bid
+            return (
+                [
+                    f"\t'You bid Php {_fmt(bid)}.'",
+                    (
+                        f"The host announced, \"We have multiple bidders sending their bids in the database now. "
+                        f"The highest bidder is from table 1443, entering the bid with an amount of "
+                        f"Php {_fmt(bid)}. Who wants to up the price?\""
+                    ),
+                    (
+                        f"Bidder {COMPETITOR_NAME} from Table 3388 counters with Php {_fmt(competitor_bid)}. "
+                        f"You are no longer the highest bidder."
+                    ),
+                ],
+                InputConfig(
+                    type="number",
+                    label="Enter your Bid, or type 0 to stop bidding:",
+                    placeholder=f"Must exceed {_fmt(session.item_price)}",
+                ),
+            )
+
+        # Competitor cannot match — player wins
         session.my_bid = bid
         session.item_price = bid
         session.state = "WIN_PAUSE"
@@ -215,18 +301,19 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
 
     # ── Win pause — key press before final win messages ───────────────────────
     if session.state == "WIN_PAUSE":
-        session.new_balance = session.balance - session.my_bid + WIN_INCENTIVE
+        incentive = _calc_incentive(session.my_bid)
+        session.new_balance = session.balance - session.my_bid + incentive
         session.state = "VERIFY_AGE"
         return (
             [
                 (
                     f"\t'System: Congratulations! Item 0001 was sold to User @Phoenix, the first highest "
                     f"bidder, for Php {_fmt(session.item_price)}. \n\tThey will receive an incentive of "
-                    f"Php 20,000 and all bidders from @Phoenix's table will receive Php 10,000 each.'"
+                    f"Php {_fmt(incentive)}.'"
                 ),
                 "Consequently, you receive another message from your screen.",
                 (
-                    f"\t'Hello @Phoenix,\n\t\tYou received Php 30,000 incentive in your account. "
+                    f"\t'Hello @Phoenix,\n\t\tYou received Php {_fmt(incentive)} incentive in your account. "
                     f"Your balance is now Php {_fmt(session.new_balance)}. Item 0001 is beginning its "
                     f"transfer to your account. For verification, please type your age below.'"
                 ),
@@ -248,14 +335,22 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                 InputConfig(type="number", label="Verification — Enter your age:", placeholder="Your age..."),
             )
         if entered == session.half_age:
-            session.state = "WON"
+            session.state = "BID_BREAK"
             return (
                 [
                     "\n\t'Congratulations! You have successfully claimed Item 0001 "
                     "and it is now moved into your account inventory.'",
                     "The first bidding ended.",
+                    "The host announces that the first bidding is now over.",
+                    "We have fifteen minute break before the next bidding starts.",
+                    "During this time, you can check your balance and prepare for the next item.",
+                    "For those who have acquired inventories, please check your hologram screen for the items you have won.",
                 ],
-                InputConfig(type="done", label="Auction complete."),
+                InputConfig(
+                    type="choice",
+                    label="What would you like to do during the break?",
+                    options=["1 — Check balance", "2 — Check inventory", "0 — Continue"],
+                ),
             )
         return (
             ["You are not ineligible to claim the item."],
@@ -264,7 +359,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
 
     # ── Loss pause — key press before final loss messages ────────────────────
     if session.state == "LOSS_PAUSE":
-        session.state = "ENDED"
+        session.state = "BID_BREAK"
         return (
             [
                 (
@@ -272,8 +367,16 @@ def process_step(session: SessionData, value: str) -> Tuple[List[str], InputConf
                     f"Your money is now Php {_fmt(session.balance)}.'"
                 ),
                 "The first bidding ended.",
+                "The host announces that the first bidding is now over.",
+                "We have fifteen minute break before the next bidding starts.",
+                "During this time, you can check your balance and prepare for the next item.",
+                "For those who have acquired inventories, please check your hologram screen for the items you have won.",
             ],
-            InputConfig(type="done", label="Auction ended."),
+            InputConfig(
+                type="choice",
+                label="What would you like to do during the break?",
+                options=["1 — Check balance", "2 — Check inventory", "0 — Continue"],
+            ),
         )
 
     # ── Terminal states ───────────────────────────────────────────────────────
