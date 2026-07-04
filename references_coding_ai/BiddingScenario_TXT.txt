@@ -92,11 +92,11 @@ namespace ProgramExample
                 {
                   Console.WriteLine("You decide not to bid.");
                   Console.WriteLine("The host announced, \"We have multiple bidders sending their bids in the database now. The highest bidder is from table 1443, entering the bid with an amount of Php 70,000.\"");
-                  Console.WriteLine("\t\"Item 0001 is now worth Php " + Item0001 + ". Who wants to up the bid?\" \nThe auction went on until Item 0001 was sold to user @SwiftFox of Table 3388 for Php 120,000. The System announced it for everyone.");
+                  Console.WriteLine("\t\"Item 001 is now worth Php " + Item0001 + ". Who wants to up the bid?\" \nThe auction went on until Item 001 was sold to user @SwiftFox of Table 3388 for Php 120,000. The System announced it for everyone.");
                   Console.WriteLine("Press any key to proceed...");
                   Console.ReadKey();
                   Console.Beep();
-                  Console.WriteLine("\t\'System: Congratulations! Item 0001 was sold to User @SwiftFox for Php 120,000, the first highest bidder. \nThey will receive an incentive of Php 50,000 and all bidders from @SwiftFox's table will receive Php20,000 incentives each.\'");
+                  Console.WriteLine("\t\'System: Congratulations! Item 001 was sold to User @SwiftFox for Php 120,000, the first highest bidder. \nThey will receive an incentive of Php 50,000 and all bidders from @SwiftFox's table will receive Php20,000 incentives each.\'");
                   StartingMoney += 20000;
                   Console.WriteLine("Consequently you receive another message from your screen.");
                   Console.WriteLine("Press any key to proceed...");
@@ -123,7 +123,7 @@ namespace ProgramExample
                   Console.WriteLine("Press any key to proceed...");
                   Console.ReadKey();
                   Console.Beep();
-                  Console.WriteLine("\t\'System: Congratulations! Item 0001 was sold to User " + UserName + ", the first highest bidder, for Php " + Item0001 + ". \nThey will receive an incentive of Php 20,000 and all bidders from @Phoenix's table will receive Php10,000 incentives each.\'");
+                  Console.WriteLine("\t\'System: Congratulations! Item 001 was sold to User " + UserName + ", the first highest bidder, for Php " + Item0001 + ". \nThey will receive an incentive of Php 20,000 and all bidders from @Phoenix's table will receive Php10,000 incentives each.\'");
                   double NewBalance= StartingMoney - MyBid1 + 30000;
                   Console.WriteLine("Consequently, you receive another message from your screen. \n\t\'Hello " + UserName + ",\n\t\tYou received Php 30,000 incentive in your account. Your balance is now Php " + NewBalance + ". Item 001 is beginning its transfer to your account. For verification, please type your age below.\'");
                   while (true)
@@ -133,7 +133,7 @@ namespace ProgramExample
                     if (EnterYourAge == NewAge)
                       {
                         Console.Beep();
-                        Console.WriteLine("\n\t\'Congratulations! You have successfully claimed Item 0001 and it is now moved into your account inventory.\'");
+                        Console.WriteLine("\n\t\'Congratulations! You have successfully claimed Item 001 and it is now moved into your account inventory.\'");
                         break;
                       }
                     else
@@ -148,8 +148,8 @@ namespace ProgramExample
             {
               Console.WriteLine("You decide not to bid.");
               Console.WriteLine("The host announced, \"We have multiple bidders sending their bids in the database now. The highest bidder is from table 1443, entering the bid with an amount of Php 70,000.\"");
-              Console.WriteLine("\t\"Item 0001 is now worth Php " + Item0001 + ". Who wants to up the bid?\" \nThe auction went on until Item 0001 was sold to user @SwiftFox of Table 3388 for Php 120,000. The System announced it for everyone.");
-              Console.WriteLine("\t\'System: Congratulations! Item 0001 was sold to User @SwiftFox for Php 120,000, the first highest bidder. \nThey will receive an incentive of Php 50,000 and all bidders from @SwiftFox's table will receive Php20,000 incentives each.\'");
+              Console.WriteLine("\t\"Item 001 is now worth Php " + Item0001 + ". Who wants to up the bid?\" \nThe auction went on until Item 001 was sold to user @SwiftFox of Table 3388 for Php 120,000. The System announced it for everyone.");
+              Console.WriteLine("\t\'System: Congratulations! Item 001 was sold to User @SwiftFox for Php 120,000, the first highest bidder. \nThey will receive an incentive of Php 50,000 and all bidders from @SwiftFox's table will receive Php20,000 incentives each.\'");
               StartingMoney += 20000;
               Console.WriteLine("Consequently you receive another message from your screen."); 
               Console.WriteLine("Press any key to proceed...");

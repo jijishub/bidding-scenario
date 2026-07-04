@@ -29,10 +29,10 @@ function classify(text: string): Kind {
 }
 
 const COLOR: Record<Kind, string> = {
-  system: '#c084fc',
+  system: 'var(--teleprompter-purple)',
   error: '#f87171',
   dialog: '#e2e8f0',
-  narrative: '#67e8f9',
+  narrative: 'var(--teleprompter-text)',
 }
 
 function MessageLine({
@@ -69,7 +69,7 @@ function MessageLine({
             animationDuration: '1s',
             animationTimingFunction: 'step-end',
             animationIterationCount: 'infinite',
-            color: '#67e8f9',
+            color: 'var(--teleprompter-text)',
           }}
         >
           ▋

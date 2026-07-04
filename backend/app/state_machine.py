@@ -193,18 +193,18 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
         )
         
         return (
-            [
-                "The host announces that the first bidding is now over.",
-                "\t\"We have fifteen minute break before the next bidding starts. During this time, you can check your balance and prepare for the next item.\"",
-                "\t\"For those who have acquired inventories, please check your hologram screen for the items you have won.\"",
-            ],
-            InputConfig(
-                type="choice",
-                label="What would you like to do during the break?",
-                options=break_options,
-            ),
-            [],
-        )
+                    [
+                        Message(text="The host announces that the first bidding is now over.", color="#ffffff"),
+                        Message(text="\t\"We have fifteen minute break before the next bidding starts. During this time, you can check your balance and prepare for the next item.\"", color="#67e8f9"),
+                        Message(text="\t\"For those who have acquired inventories, please check your hologram screen for the items you have won.\", informed the host.", color="#67e8f9"),
+                    ],
+                    InputConfig(
+                        type="choice",
+                        label="What would you like to do during the break?",
+                        options=break_options,
+                    ),
+                    [],
+                )
     
     #Inventory checker
     if session.state == "BID_BREAK":
@@ -360,14 +360,14 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
         return (
             [
                 (
-                    f"\t'System: Congratulations! Item 0001 was sold to User @Phoenix, the first highest "
+                    f"\t'System: Congratulations! Item 001 was sold to User @Phoenix, the first highest "
                     f"bidder, for Php {_fmt(session.item_price)}. \n\tThey will receive an incentive of "
                     f"Php {_fmt(incentive)}.'"
                 ),
                 "Consequently, you receive another message from your screen.",
                 (
                     f"\t'Hello @Phoenix,\n\t\tYou received Php {_fmt(incentive)} incentive in your account. "
-                    f"Your balance is now Php {_fmt(session.new_balance)}. Item 0001 is beginning its "
+                    f"Your balance is now Php {_fmt(session.new_balance)}. Item 001 is beginning its "
                     f"transfer to your account. For verification, please type your age below.'"
                 ),
             ],
@@ -393,19 +393,27 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
             session.state = "BID_BREAK"
             return (
                 [
-                    "\n\t'Congratulations! You have successfully claimed Item 0001 "
+                    "\n\t'Congratulations! You have successfully claimed Item 001 "
                     "and it is now moved into your account inventory.'",
                     "The first bidding ended.",
-                    "The host announces that the first bidding is now over.",
-                    '""We have fifteen minute break before the next bidding starts. During this time, you can check your balance and prepare for the next item.""',
-                    '""For those who have acquired inventories, please check your hologram screen for the items you have won.\", informed the host.""',
+                    Message(text="The host announces that the first bidding is now over.", color="#ffffff"),
+                    Message(
+                        text="\t\"We have fifteen minute break before the next bidding starts. "
+                        "During this time, you can check your balance and prepare for the next item.\"",
+                        color="#67e8f9",
+                    ),
+                    Message(
+                        text="\t\"For those who have acquired inventories, please check your hologram "
+                        "screen for the items you have won.\", informed the host.",
+                        color="#67e8f9",
+                    ),
                 ],
                 InputConfig(
                     type="choice",
                     label="What would you like to do during the break?",
                     options=["1 — Check balance", "2 — Check inventory", "0 — Continue"],
                 ),
-                [],
+                ["play_beep_3x"],
             )
         return (
             ["You are not ineligible to claim the item."],
@@ -457,11 +465,11 @@ def _loss_outcome(session: SessionData) -> Tuple[List[Union[str, Message]], Inpu
             ),
             (
                 f"\t\"Item 001 is now worth Php {_fmt(session.item_price)}. Who wants to up the bid?\" "
-                f"\n\tThe auction went on until Item 0001 was sold to user {COMPETITOR_NAME} of Table 1443 "
+                f"\n\tThe auction went on until Item 001 was sold to user {COMPETITOR_NAME} of Table 1443 "
                 "for Php 120,000. The System announced it for everyone."
             ),
             (
-                f"\t'System: Congratulations! Item 0001 was sold to User {COMPETITOR_NAME} for Php 120,000, "
+                f"\t'System: Congratulations! Item 001 was sold to User {COMPETITOR_NAME} for Php 120,000, "
                 "the first highest bidder. \n\tThey will receive an incentive of Php 50,000 and all "
                 f"bidders from {COMPETITOR_NAME}'s table will receive Php 20,000 incentives each.'"
             ),

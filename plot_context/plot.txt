@@ -33,7 +33,7 @@ CHAPTER 1 — "The Golden Tumbler" (fully implemented)
    - Age is halved and stored as the future verification code.
 2. Story beat: hologram powers on, greets the player, renames them
    "Phoenix," states starting balance and starting bid (Php 50,000).
-3. Auctioneer introduces Item 0001: a limited-edition golden tumbler
+3. Auctioneer introduces Item 001: a limited-edition golden tumbler
    ("Aquaflask") from "the Overworld," dated 2023.
 4. CHOICE — Do you want to bid?
    ┌─ NO  → auto-loss path: SwiftFox wins for Php 120,000 flavor text,
@@ -48,7 +48,7 @@ CHAPTER 1 — "The Golden Tumbler" (fully implemented)
             - Valid bid, SwiftFox can't/won't match → PLAYER WINS.
 5. Win path: incentive calculated from final winning bid (see tiers
    above) → balance updated → player must re-enter their verification
-   code (their halved age) to claim Item 0001 into inventory.
+   code (their halved age) to claim Item 001 into inventory.
 6. Either outcome funnels into the BREAK screen: check balance, check
    inventory, or continue.
 7. (Current end of implemented content) — continuing from the break loops
@@ -81,7 +81,7 @@ WHERE IT'S GOING (roadmap / open threads, not yet built)
   bidding-loop mechanics against a fresh item, starting price, and
   possibly a different or upgraded rival.
 - Inventory screen currently has no real data behind it — needs to persist
-  and display won items (Item 0001 golden tumbler, etc.).
+  and display won items (Item 001 golden tumbler, etc.).
 - "Alive" flag is captured but never used narratively yet — could gate
   future dialogue/branches.
 - Rival bidder could get personality/escalation across chapters (e.g.

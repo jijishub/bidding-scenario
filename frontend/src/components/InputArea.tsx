@@ -27,6 +27,13 @@ function glassBtn(color: string, disabled = false): CSSProperties {
   }
 }
 
+function formatWithCommas(raw: string): string {
+  if (!raw) return ''
+  const [intPart, decPart] = raw.split('.')
+  const formattedInt = intPart === '' ? '' : Number(intPart).toLocaleString('en-US')
+  return decPart !== undefined ? `${formattedInt}.${decPart}` : formattedInt
+}
+
 function glassInput(): CSSProperties {
   return {
     flex: 1,
@@ -219,9 +226,18 @@ export default function InputArea({ config, onSubmit, loading, onRestart }: Prop
       <div style={{ display: 'flex', gap: 8 }}>
         <input
           ref={inputRef}
-          type={config.type === 'number' ? 'number' : 'text'}
-          value={value}
-          onChange={e => setValue(e.target.value)}
+          type="text"
+          inputMode={config.type === 'number' ? 'decimal' : undefined}
+          value={config.type === 'number' ? formatWithCommas(value) : value}
+          onChange={e => {
+            if (config.type !== 'number') {
+              setValue(e.target.value)
+              return
+            }
+            const raw = e.target.value.replace(/,/g, '').replace(/[^0-9.]/g, '')
+            const [head, ...rest] = raw.split('.')
+            setValue(rest.length ? `${head}.${rest.join('')}` : head)
+          }}
           onKeyDown={handleKey}
           placeholder={config.placeholder}
           disabled={loading}
