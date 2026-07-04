@@ -105,7 +105,7 @@ export default function Teleprompter({
         <div style={{ padding: '20px 24px', minHeight: 300 }}>
           {error ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <p style={{ color: '#f87171', fontSize: 13, whiteSpace: 'pre-wrap', margin: 0 }}>
+              <p style={{ color: 'var(--teleprompter-red)', fontSize: 13, whiteSpace: 'pre-wrap', margin: 0 }}>
                 {error}
               </p>
               <button
@@ -118,7 +118,7 @@ export default function Teleprompter({
                   fontFamily: 'inherit',
                   background: 'rgba(248,113,113,0.1)',
                   border: '1px solid rgba(248,113,113,0.35)',
-                  color: '#f87171',
+                  color: 'var(--teleprompter-red)',
                   cursor: 'pointer',
                 }}
               >

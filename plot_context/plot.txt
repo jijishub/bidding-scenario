@@ -6,26 +6,40 @@ PREMISE
 -------
 A sci-fi auction house in an unnamed future. The player is scanned, renamed
 "Phoenix," and given a hologram-screen account with starting money (Php 100,000) to bid
-on rare items in a live auction hall. A rival bidder, @SwiftFox (Table 1443),
-competes for the same items. Money won/lost and incentives earned carry
-forward between items.
+on rare items in a live auction hall. Two rival bidders compete for the same
+items: @Viper (Table 3388), who only ever raises the player's very first bid,
+and @SwiftFox (Table 1443 — the same table as the player), who handles every
+counter after that and is the one who ultimately walks away with the item if
+the player folds. Money won/lost and incentives earned carry forward between
+items.
 
 WORLD RULES (established so far)
 ---------------------------------
-- Player identity: real name + age are captured, then the game HALVES the
-  player's age to get "half_age" — this becomes a recurring verification
-  code used later to claim won items ("type your age" = type half_age).
+- Player identity: name, age, and alive-status are captured. Names are
+  validated (letters, spaces, and hyphens only — rejects digits/symbols)
+  and auto-capitalized per word on submit ("leo garcia" → "Leo Garcia") so
+  hyphenated names like "Jo-Ann" still come out proper-cased. The game then
+  HALVES the player's age to get "half_age" — this becomes a recurring
+  verification code used later to claim won items ("type your age" = type
+  half_age).
 - Starting balance: Php 100,000.
 - Every item has a rising starting bid.
-- Rival bidder @SwiftFox always counters a player bid by +5,000, up to a
-  personal ceiling (currently 90,000). If the player bids above what
-  SwiftFox is willing to match, the player wins outright.
+- Rival bidders counter a player bid by +5,000, up to a shared ceiling
+  (currently 90,000). @Viper always takes the first counter; every counter
+  after that is @SwiftFox. If the player bids above what the rivals are
+  willing to match, the player wins outright.
 - Winning nets an incentive (tiered — bigger winning bid = bigger incentive:
   10k / 20k / 30k / 40k at the 65k / 80k / 90k breakpoints).
-- Declining to bid (or bidding 0) means SwiftFox wins the item instead, and
-  the player still receives a flat 20,000 "consolation" incentive.
+- Declining to bid (or bidding 0) means the current leading rival
+  (@Viper or @SwiftFox, whoever last countered) keeps the standing bid, and
+  the epilogue has @SwiftFox go on to win the item afterward; the player
+  still receives a flat 20,000 "consolation" incentive.
 - Between items there's a "break" screen where the player can check
   balance or inventory before continuing.
+- Sessions are persisted to SQLite between requests (each API call is
+  stateless) — this includes which rival is currently leading, so the
+  Viper→SwiftFox handoff survives across separate requests, not just
+  within one in-memory game.
 
 CHAPTER 1 — "The Golden Tumbler" (fully implemented)
 -----------------------------------------------------
@@ -43,9 +57,10 @@ CHAPTER 1 — "The Golden Tumbler" (fully implemented)
             - Bid ≤ current price → rejected, try again.
             - Bid > balance → rejected, try again.
             - Bid == 0 → same as declining, consolation path → break.
-            - Valid bid, SwiftFox can still afford +5,000 → SwiftFox
-              counters, price rises, player must bid again or fold (0).
-            - Valid bid, SwiftFox can't/won't match → PLAYER WINS.
+            - Valid bid, a rival can still afford +5,000 → @Viper counters
+              the first raise, @SwiftFox counters every raise after that;
+              price rises, player must bid again or fold (0).
+            - Valid bid, no rival can/will match → PLAYER WINS.
 5. Win path: incentive calculated from final winning bid (see tiers
    above) → balance updated → player must re-enter their verification
    code (their halved age) to claim Item 001 into inventory.
@@ -62,11 +77,15 @@ OPTION MAP (what each choice actually does, for quick reference)
                               if player later types 0).
 - Bid? No                  → guaranteed loss of the item, guaranteed
                               +20,000 consolation, skips straight to break.
-- Mid-bid "0"               → same as "No" above (identical loss payout).
-- Mid-bid valid raise       → may trigger SwiftFox counter-raise, or win
-                              outright if raise exceeds SwiftFox's ceiling
+- Mid-bid "0"               → same as "No" above (identical loss payout);
+                              recap correctly names whichever rival
+                              (@Viper or @SwiftFox) currently holds the
+                              standing bid, not a fixed name.
+- Mid-bid valid raise       → 1st counter is always @Viper, every counter
+                              after that is @SwiftFox; player wins outright
+                              if the raise exceeds the shared ceiling
                               (90,000 + 5,000 = must bid ≥ 90,001-ish to
-                              guarantee the win, since 90,000 is SwiftFox's
+                              guarantee the win, since 90,000 is the rivals'
                               max counter capacity).
 - Break: Check balance      → shows current balance, no state change.
 - Break: Check inventory    → placeholder screen, no items rendered yet.
@@ -84,8 +103,9 @@ WHERE IT'S GOING (roadmap / open threads, not yet built)
   and display won items (Item 001 golden tumbler, etc.).
 - "Alive" flag is captured but never used narratively yet — could gate
   future dialogue/branches.
-- Rival bidder could get personality/escalation across chapters (e.g.
-  SwiftFox's ceiling rising each round, or a new rival appearing).
+- Two-rival handoff (@Viper first counter, @SwiftFox after) is in place;
+  further escalation across chapters (rising ceilings, new rivals joining)
+  is still open.
 - No lose-the-whole-game / bankruptcy ending yet — balance can't go
   negative, but there's no explicit "game over, you're broke" branch.
 
@@ -93,3 +113,11 @@ CHANGE LOG
 ----------
 - 2026-07-04: Initial plot doc written from backend/app/state_machine.py
   (Chapter 1 fully mapped; Chapter 2 not yet implemented).
+- 2026-07-05: Introduced @Viper (Table 3388) as a distinct rival who takes
+  only the first bidding counter; @SwiftFox (Table 1443) now handles every
+  counter after that and remains the eventual winner in the decline/loss
+  epilogue. Fixed a bug where the standing-bid recap on decline always
+  named the wrong bidder/table. Added name validation (letters/spaces/
+  hyphens only) and per-word capitalization on the NAME_INPUT step. Fixed
+  a session-persistence gap where the Viper→SwiftFox handoff was silently
+  reset every request because SQLite wasn't storing it.

@@ -30,7 +30,7 @@ function classify(text: string): Kind {
 
 const COLOR: Record<Kind, string> = {
   system: 'var(--teleprompter-purple)',
-  error: '#f87171',
+  error: 'var(--teleprompter-red)',
   dialog: '#e2e8f0',
   narrative: 'var(--teleprompter-text)',
 }

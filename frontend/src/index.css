@@ -1,10 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  /* Teleprompter message-text palette — default is cyan; white and purple are the only overrides. */
+  /* Teleprompter message-text palette — default is cyan; white, purple, and red are the overrides. */
   --teleprompter-text: #67e8f9;   /* default text color for all teleprompter messages */
   --teleprompter-white: #ffffff; /* hologram/screen-displayed text */
   --teleprompter-purple: #c084fc; /* system/announcement messages */
+  --teleprompter-red: #f87171;    /* error messages */
 }
 
 @layer base {

@@ -194,7 +194,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
         
         return (
                     [
-                        Message(text="The host announces that the first bidding is now over.", color="#ffffff"),
+                        Message(text="The host announces that the first bidding is now over.", color="#white"),
                         Message(text="\t\"We have fifteen minute break before the next bidding starts. During this time, you can check your balance and prepare for the next item.\"", color="#67e8f9"),
                         Message(text="\t\"For those who have acquired inventories, please check your hologram screen for the items you have won.\", informed the host.", color="#67e8f9"),
                     ],
@@ -396,7 +396,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                     "\n\t'Congratulations! You have successfully claimed Item 001 "
                     "and it is now moved into your account inventory.'",
                     "The first bidding ended.",
-                    Message(text="The host announces that the first bidding is now over.", color="#ffffff"),
+                    Message(text="The host announces that the first bidding is now over.", color="#white"),
                     Message(
                         text="\t\"We have fifteen minute break before the next bidding starts. "
                         "During this time, you can check your balance and prepare for the next item.\"",
@@ -431,10 +431,17 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                     f"Your money is now Php {_fmt(session.balance)}.'"
                 ),
                 "The first bidding ended.",
-                "The host announces that the first bidding is now over.",
-                "We have fifteen minute break before the next bidding starts.",
-                "During this time, you can check your balance and prepare for the next item.",
-                "For those who have acquired inventories, please check your hologram screen for the items you have won.",
+                Message(text="The host announces that the first bidding is now over.", color="#ffffff"),
+                Message(
+                    text="\t\"We have fifteen minute break before the next bidding starts. "
+                    "During this time, you can check your balance and prepare for the next item.\"",
+                    color="#67e8f9",
+                ),
+                Message(
+                    text="\t\"For those who have acquired inventories, please check your hologram "
+                    "screen for the items you have won.\", informed the host.",
+                    color="#67e8f9",
+                ),
             ],
             InputConfig(
                 type="choice",

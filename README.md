@@ -1,10 +1,20 @@
 # BiddingScenario
 
-A sci-fi auction simulation ported from a legacy C# console program into a decoupled web app. The backend runs a strict state-machine replica of the original bidding logic; the frontend renders it as a glassmorphism terminal with a character-by-character typing effect.
+> 🚧 **Work in progress.** Story beat 1 is playable end-to-end; later chapters, inventory, and a few other threads listed in `plot_context/plot.txt` are still unbuilt. Expect breaking changes while this is actively developed.
+
+A sci-fi auction simulation ported from a personal C# console exercise into a decoupled web app. The backend runs a strict state-machine replica of the original bidding logic; the frontend renders it as a glassmorphism terminal with a character-by-character typing effect.
 
 **Stack:** FastAPI · SQLite (Turso-ready) · React 19 · TypeScript · Tailwind CSS v4 · Vite 8
 
-**Deployment targets:** Fly.io (backend) · Vercel (frontend)
+**Deployment targets:** Fly.io (backend - planning to change) · Vercel (frontend)
+
+---
+
+## Provenance & License
+
+The web app's logic is a from-scratch reimplementation of an earlier C# console exercise by the same author, kept in [`references_coding_ai/`](references_coding_ai/) for historical reference — it isn't a third-party source.
+
+This repository has no `LICENSE` file, so standard copyright applies by default: being publicly visible does not grant permission to copy, modify, or redistribute the code. Reach out to the author if you'd like to use it beyond reading it.
 
 ---
 
@@ -33,7 +43,9 @@ BiddingScenario/
 │   ├── vite.config.ts
 │   └── package.json
 ├── src/                         # Terminal UI module (Python star renderer)
-└── references_coding_ai/        # Original C# reference program
+├── tests/                       # Backend smoke tests (pytest)
+├── plot_context/                # Living plot/design doc, kept in sync with state_machine.py
+└── references_coding_ai/        # Original C# exercise this project grew out of
 ```
 
 ---
@@ -162,7 +174,7 @@ All SQL and row access is identical — libsql is API-compatible with sqlite3.
 
 ## Deployment
 
-### Backend → Fly.io
+### Backend → Fly.io - planning to change
 
 ```bash
 cd backend
