@@ -1,0 +1,95 @@
+BIDDING SCENARIO — PLOT & OPTIONS TRACKER
+(auto-updated as the game develops — reflects backend/app/state_machine.py)
+==========================================================================
+
+PREMISE
+-------
+A sci-fi auction house in an unnamed future. The player is scanned, renamed
+"Phoenix," and given a hologram-screen account with starting money (Php 100,000) to bid
+on rare items in a live auction hall. A rival bidder, @SwiftFox (Table 1443),
+competes for the same items. Money won/lost and incentives earned carry
+forward between items.
+
+WORLD RULES (established so far)
+---------------------------------
+- Player identity: real name + age are captured, then the game HALVES the
+  player's age to get "half_age" — this becomes a recurring verification
+  code used later to claim won items ("type your age" = type half_age).
+- Starting balance: Php 100,000.
+- Every item has a rising starting bid.
+- Rival bidder @SwiftFox always counters a player bid by +5,000, up to a
+  personal ceiling (currently 90,000). If the player bids above what
+  SwiftFox is willing to match, the player wins outright.
+- Winning nets an incentive (tiered — bigger winning bid = bigger incentive:
+  10k / 20k / 30k / 40k at the 65k / 80k / 90k breakpoints).
+- Declining to bid (or bidding 0) means SwiftFox wins the item instead, and
+  the player still receives a flat 20,000 "consolation" incentive.
+- Between items there's a "break" screen where the player can check
+  balance or inventory before continuing.
+
+CHAPTER 1 — "The Golden Tumbler" (fully implemented)
+-----------------------------------------------------
+1. Intake: player enters NAME → AGE → ALIVE (yes/no).
+   - Age is halved and stored as the future verification code.
+2. Story beat: hologram powers on, greets the player, renames them
+   "Phoenix," states starting balance and starting bid (Php 50,000).
+3. Auctioneer introduces Item 0001: a limited-edition golden tumbler
+   ("Aquaflask") from "the Overworld," dated 2023.
+4. CHOICE — Do you want to bid?
+   ┌─ NO  → auto-loss path: SwiftFox wins for Php 120,000 flavor text,
+   │        player still gets +20,000 Php consolation → break screen.
+   └─ YES → enters the bidding loop:
+            - Player types a bid amount each round.
+            - Bid ≤ current price → rejected, try again.
+            - Bid > balance → rejected, try again.
+            - Bid == 0 → same as declining, consolation path → break.
+            - Valid bid, SwiftFox can still afford +5,000 → SwiftFox
+              counters, price rises, player must bid again or fold (0).
+            - Valid bid, SwiftFox can't/won't match → PLAYER WINS.
+5. Win path: incentive calculated from final winning bid (see tiers
+   above) → balance updated → player must re-enter their verification
+   code (their halved age) to claim Item 0001 into inventory.
+6. Either outcome funnels into the BREAK screen: check balance, check
+   inventory, or continue.
+7. (Current end of implemented content) — continuing from the break loops
+   back to "auction concluded" since Chapter 2 doesn't exist yet.
+
+OPTION MAP (what each choice actually does, for quick reference)
+------------------------------------------------------------------
+- Alive? true/false        → cosmetic status line only; no mechanical
+                              branch yet (reserved for future use).
+- Bid? Yes                 → enters bidding loop (can still end in a loss
+                              if player later types 0).
+- Bid? No                  → guaranteed loss of the item, guaranteed
+                              +20,000 consolation, skips straight to break.
+- Mid-bid "0"               → same as "No" above (identical loss payout).
+- Mid-bid valid raise       → may trigger SwiftFox counter-raise, or win
+                              outright if raise exceeds SwiftFox's ceiling
+                              (90,000 + 5,000 = must bid ≥ 90,001-ish to
+                              guarantee the win, since 90,000 is SwiftFox's
+                              max counter capacity).
+- Break: Check balance      → shows current balance, no state change.
+- Break: Check inventory    → placeholder screen, no items rendered yet.
+- Break: Continue           → intended to move to next item; currently
+                              dead-ends (no Chapter 2 built yet).
+- Age verification wrong    → soft-locks on the prompt until correct
+                              half_age is entered (no penalty, no timeout).
+
+WHERE IT'S GOING (roadmap / open threads, not yet built)
+-----------------------------------------------------------
+- Chapter 2+: a second collection/item needs writing — reuse the same
+  bidding-loop mechanics against a fresh item, starting price, and
+  possibly a different or upgraded rival.
+- Inventory screen currently has no real data behind it — needs to persist
+  and display won items (Item 0001 golden tumbler, etc.).
+- "Alive" flag is captured but never used narratively yet — could gate
+  future dialogue/branches.
+- Rival bidder could get personality/escalation across chapters (e.g.
+  SwiftFox's ceiling rising each round, or a new rival appearing).
+- No lose-the-whole-game / bankruptcy ending yet — balance can't go
+  negative, but there's no explicit "game over, you're broke" branch.
+
+CHANGE LOG
+----------
+- 2026-07-04: Initial plot doc written from backend/app/state_machine.py
+  (Chapter 1 fully mapped; Chapter 2 not yet implemented).

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import List, Tuple, Union
 
@@ -9,9 +10,15 @@ STARTING_BID = 50_000.0
 STARTING_MONEY = 100_000.0
 NO_BID_INCENTIVE = 20_000.0
 
-COMPETITOR_NAME = "@SwiftFox"
-COMPETITOR_MAX = 90_000.0       # SwiftFox will not bid above this amount
-COMPETITOR_INCREMENT = 5_000.0  # SwiftFox always counters by this much above your bid
+COMPETITOR_NAME = "@SwiftFox"    # Table 1443 — the mystery bidder who eventually wins if you walk away
+COMPETITOR_MAX = 90_000.0        # Viper will not bid above this amount
+COMPETITOR_INCREMENT = 5_000.0   # Viper or any competitor always counters by this much above your bid
+
+COMPETITOR_NAME2 = "@Viper"  # Table 3388
+
+NAME_PATTERN = re.compile(r"^[A-Za-z\s-]+$")
+
+INVENTORY=False
 
 
 @dataclass
@@ -26,6 +33,9 @@ class SessionData:
     item_price: float = STARTING_BID
     my_bid: float = 0.0
     new_balance: float = 0.0
+    counter_count: int = 0
+    last_counterer: str = COMPETITOR_NAME2
+    last_counterer_table: str = "3388"
 
 
 def _fmt(n: float) -> str:
@@ -69,7 +79,13 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                 InputConfig(type="text", label="Type your name:", placeholder="Your name..."),
                 [],
             )
-        session.name = v
+        if not NAME_PATTERN.match(v):
+            return (
+                ["Names can only contain letters, spaces, and hyphens. Please try again."],
+                InputConfig(type="text", label="Type your name:", placeholder="Your name..."),
+                [],
+            )
+        session.name = v.title()
         session.state = "AGE_INPUT"
         return [], InputConfig(type="number", label="Type your age:", placeholder="Type your age..."), []
 
@@ -163,22 +179,29 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                 label="Do you want to bid for the item?",
                 options=["1 — Yes, I want to bid", "0 — No, skip this item"],
             ),
+            [],
         )
-    
+
     # ── Story beat 3 - First Bid break ─────────────────────────────────────────────
     if session.state == "WON" or session.state == "ENDED":
         session.state = "BID_BREAK"
+        
+        break_options = (
+            ["1 — Check balance", "2 — Check inventory", "0 — Continue"] 
+            if INVENTORY 
+            else ["1 — Check balance", "0 — Continue"]
+        )
+        
         return (
             [
                 "The host announces that the first bidding is now over.",
-                "We have fifteen minute break before the next bidding starts.",
-                "During this time, you can check your balance and prepare for the next item.",
-                "For those who have acquired inventories, please check your hologram screen for the items you have won.",
+                "\t\"We have fifteen minute break before the next bidding starts. During this time, you can check your balance and prepare for the next item.\"",
+                "\t\"For those who have acquired inventories, please check your hologram screen for the items you have won.\"",
             ],
             InputConfig(
                 type="choice",
                 label="What would you like to do during the break?",
-                options=["1 — Check balance", "2 — Check inventory", "0 — Continue"],
+                options=break_options,
             ),
             [],
         )
@@ -223,8 +246,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                 placeholder=f"Must exceed {_fmt(session.item_price)}",
             ), []
         if v.startswith("0"):
-            msgs, inp = _loss_outcome(session)
-            return msgs, inp, []
+            return _loss_outcome(session)
         return (
             ["Please select 1 (Yes) or 0 (No)."],
             InputConfig(
@@ -251,8 +273,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
             )
 
         if bid == 0:
-            msgs, inp = _loss_outcome(session)
-            return msgs, inp, []
+            return _loss_outcome(session)
 
         if bid <= session.item_price:
             return (
@@ -280,8 +301,14 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
         competitor_bid = bid + COMPETITOR_INCREMENT
 
         if competitor_bid <= COMPETITOR_MAX:
-            # @SwiftFox raises — player must bid again or give up
+            # @Viper counters your first bid only; @SwiftFox handles every counter after that.
             session.item_price = competitor_bid
+            if session.counter_count == 0:
+                counterer_name, counterer_table = COMPETITOR_NAME2, "3388"
+            else:
+                counterer_name, counterer_table = COMPETITOR_NAME, "1443"
+            session.counter_count += 1
+            session.last_counterer, session.last_counterer_table = counterer_name, counterer_table
             return (
                 [
                     f"\t'You bid Php {_fmt(bid)}.'",
@@ -291,7 +318,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                         f"Php {_fmt(bid)}. Who wants to up the price?\""
                     ),
                     (
-                        f"Bidder {COMPETITOR_NAME} from Table 3388 counters with Php {_fmt(competitor_bid)}. "
+                        f"Bidder {counterer_name} from Table {counterer_table} counters with Php {_fmt(competitor_bid)}. "
                         f"You are no longer the highest bidder."
                     ),
                 ],
@@ -370,9 +397,8 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                     "and it is now moved into your account inventory.'",
                     "The first bidding ended.",
                     "The host announces that the first bidding is now over.",
-                    "We have fifteen minute break before the next bidding starts.",
-                    "During this time, you can check your balance and prepare for the next item.",
-                    "For those who have acquired inventories, please check your hologram screen for the items you have won.",
+                    '""We have fifteen minute break before the next bidding starts. During this time, you can check your balance and prepare for the next item.""',
+                    '""For those who have acquired inventories, please check your hologram screen for the items you have won.\", informed the host.""',
                 ],
                 InputConfig(
                     type="choice",
@@ -426,17 +452,18 @@ def _loss_outcome(session: SessionData) -> Tuple[List[Union[str, Message]], Inpu
             "You decide not to bid.",
             (
                 "The host announced, \"We have multiple bidders sending their bids in the database now. "
-                "The highest bidder is from table 1443, entering the bid with an amount of Php 70,000.\""
+                f"The highest bidder is {session.last_counterer} from table {session.last_counterer_table}, "
+                f"entering the bid with an amount of Php {_fmt(session.item_price)}.\""
             ),
             (
-                f"\t\"Item 0001 is now worth Php {_fmt(session.item_price)}. Who wants to up the bid?\" "
-                "\n\tThe auction went on until Item 0001 was sold to user @SwiftFox of Table 3388 "
+                f"\t\"Item 001 is now worth Php {_fmt(session.item_price)}. Who wants to up the bid?\" "
+                f"\n\tThe auction went on until Item 0001 was sold to user {COMPETITOR_NAME} of Table 1443 "
                 "for Php 120,000. The System announced it for everyone."
             ),
             (
-                "\t'System: Congratulations! Item 0001 was sold to User @SwiftFox for Php 120,000, "
+                f"\t'System: Congratulations! Item 0001 was sold to User {COMPETITOR_NAME} for Php 120,000, "
                 "the first highest bidder. \n\tThey will receive an incentive of Php 50,000 and all "
-                "bidders from @SwiftFox's table will receive Php 20,000 incentives each.'"
+                f"bidders from {COMPETITOR_NAME}'s table will receive Php 20,000 incentives each.'"
             ),
             "Consequently you receive another message from your screen.",
         ],
