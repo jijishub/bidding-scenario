@@ -362,7 +362,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                 (
                     f"\t'System: Congratulations! Item 001 was sold to User @Phoenix, the first highest "
                     f"bidder, for Php {_fmt(session.item_price)}. \n\tThey will receive an incentive of "
-                    f"Php {_fmt(incentive)}.'"
+                    f"Php {_fmt(incentive)}. All bidders in @Phoenix's table will receive Php 20,000 incentives each.'"
                 ),
                 "Consequently, you receive another message from your screen.",
                 (
