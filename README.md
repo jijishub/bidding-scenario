@@ -27,13 +27,14 @@ BiddingScenario/
 │   ├── requirements.txt
 │   └── app/
 │       ├── models.py            # Pydantic schemas
-│       ├── state_machine.py     # Full auction logic (C# parity)
+│       ├── state_machine.py     # Full auction logic (C# parity) + input factories
+│       ├── dev_shortcuts.py     # Fast-forward jump points & testing credentials
 │       ├── session_store.py     # SQLite persistence (swap 2 lines for Turso)
 │       └── stars.py             # Star field generator
 ├── frontend/
 │   ├── src/
 │   │   ├── App.tsx              # Session lifecycle + typing queue
-│   │   ├── Teleprompter.tsx     # Glassmorphism panel + star background
+│   │   ├── Teleprompter.tsx     # Glassmorphism panel + star background + Dev shortcuts
 │   │   ├── api.ts               # createSession / sendStep
 │   │   ├── types.ts             # Shared TypeScript interfaces
 │   │   └── components/
@@ -44,7 +45,9 @@ BiddingScenario/
 │   └── package.json
 ├── src/                         # Terminal UI module (Python star renderer)
 ├── tests/                       # Backend smoke tests (pytest)
-├── plot_context/                # Living plot/design doc, kept in sync with state_machine.py
+├── plot_context/                # Living plot & testing reference
+│   ├── plot.txt                 # Plot & option tracker, kept in sync with state_machine.py
+│   └── testing.txt              # Standardized test credentials & skipping points
 └── references_coding_ai/        # Original C# exercise this project grew out of
 ```
 
@@ -125,10 +128,26 @@ NAME_INPUT → AGE_INPUT → ALIVE_INPUT
   → STORY_PAUSE_1 → STORY_PAUSE_2
   → BID_CHOICE
       "1" → BIDDING (loop)
-               valid bid → WIN_PAUSE → VERIFY_AGE → WON → ENDED
-               bid = 0   → LOSS_PAUSE → ENDED
-      "0" → LOSS_PAUSE → ENDED
+               valid bid → WIN_PAUSE → VERIFY_AGE → BID_BREAK (Check balance / Inventory / Continue)
+                            CHECK_BALANCE ───↩
+               bid = 0   → LOSS_PAUSE → BID_BREAK
+      "0" → LOSS_PAUSE → BID_BREAK
 ```
+
+---
+
+## Developer & Testing Shortcuts (Dev Mode)
+
+To streamline testing without manually re-typing intake credentials every run:
+- **Title Bar `⚙ DEV` Button**: Open the app at `http://localhost:5173`, click **`⚙ DEV`** in the top right of the terminal header, and jump instantly to any phase:
+  - ⚡ **Bid Choice** (Skip intake prologue)
+  - ⚡ **Bidding Duel** (Jump straight into the active auction)
+  - ⚡ **Claim Item (Code 11)** (Jump to verification prompt)
+  - ⚡ **Break Room (Win)** (Balance = Php 45,000)
+  - ⚡ **Break Room (Loss)** (Balance = Php 120,000)
+  - 🔄 **Normal Start** (Reset to prologue)
+- **Standardized Test Credentials**: Name: `Phoenix`, Age: `22.0`, Verification code (`half_age`): `11.0`, Alive: `True`.
+- **Reference**: See [`plot_context/testing.txt`](plot_context/testing.txt).
 
 ---
 

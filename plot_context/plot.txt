@@ -66,6 +66,10 @@ CHAPTER 1 — "The Golden Tumbler" (fully implemented)
    code (their halved age) to claim Item 001 into inventory.
 6. Either outcome funnels into the BREAK screen: check balance, check
    inventory, or continue.
+   - Check balance: fully implemented. Displays account balance and allows
+     returning cleanly back to the break menu.
+   - Check inventory: placeholder screen, no items rendered yet.
+   - Continue: currently concludes the auction since Chapter 2 is unbuilt.
 7. (Current end of implemented content) — continuing from the break loops
    back to "auction concluded" since Chapter 2 doesn't exist yet.
 
@@ -87,7 +91,8 @@ OPTION MAP (what each choice actually does, for quick reference)
                               (90,000 + 5,000 = must bid ≥ 90,001-ish to
                               guarantee the win, since 90,000 is the rivals'
                               max counter capacity).
-- Break: Check balance      → shows current balance, no state change.
+- Break: Check balance      → shows current balance in the terminal and returns
+                              cleanly back to the break menu options.
 - Break: Check inventory    → placeholder screen, no items rendered yet.
 - Break: Continue           → intended to move to next item; currently
                               dead-ends (no Chapter 2 built yet).
@@ -121,3 +126,10 @@ CHANGE LOG
   hyphens only) and per-word capitalization on the NAME_INPUT step. Fixed
   a session-persistence gap where the Viper→SwiftFox handoff was silently
   reset every request because SQLite wasn't storing it.
+- 2026-10-04: Implemented 'Check Balance' during Chapter 1 break screen
+  (`CHECK_BALANCE` state loop back to `BID_BREAK`). Fixed balance synchronization
+  so winning balance is committed upon age verification, and loss balance (Php 120,000)
+  displays correctly. Extracted input config factory functions in `state_machine.py`
+  to adhere to DRY. Added `dev_shortcuts.py`, `testing.txt`, and frontend
+  `⚙ DEV` fast-forward button for instant state jumping with standardized test credentials
+  (Age 22, claiming code 11).
