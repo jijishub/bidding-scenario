@@ -53,6 +53,13 @@ def _calc_incentive(winning_bid: float) -> float:
     else:
         return 40_000.0
 
+def _get_break_options() -> List[str]:
+    """Returns available break options depending on whether inventory is enabled."""
+    return (
+        ["1 — Check balance", "2 — Check inventory", "0 — Continue"]
+        if INVENTORY
+        else ["1 — Check balance", "0 — Continue"]
+    )
 
 def start_session(session: SessionData) -> Tuple[List[str], InputConfig]:
     """Called once when a session is created. Returns intro messages + first input."""
@@ -181,39 +188,19 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
             ),
             [],
         )
-
-    # ── Story beat 3 - First Bid break ─────────────────────────────────────────────
-    if session.state == "WON" or session.state == "ENDED":
-        session.state = "BID_BREAK"
-        
-        break_options = (
-            ["1 — Check balance", "2 — Check inventory", "0 — Continue"] 
-            if INVENTORY 
-            else ["1 — Check balance", "0 — Continue"]
-        )
-        
-        return (
-                    [
-                        Message(text="The host announces that the first bidding is now over.", color="#white"),
-                        Message(text="\t\"We have fifteen minute break before the next bidding starts. During this time, you can check your balance and prepare for the next item.\"", color="#67e8f9"),
-                        Message(text="\t\"For those who have acquired inventories, please check your hologram screen for the items you have won.\", informed the host.", color="#67e8f9"),
-                    ],
-                    InputConfig(
-                        type="choice",
-                        label="What would you like to do during the break?",
-                        options=break_options,
-                    ),
-                    [],
-                )
     
     #Inventory checker
     if session.state == "BID_BREAK":
         if v.startswith("1"):
             session.state = "CHECK_BALANCE"
-            return [], InputConfig(
+            return (
+                [
+                Message(text=f"\t'Your current balance is Php {_fmt(session.balance)}.'", color="#67e8f9",)
+            ], InputConfig(
                 type="continue",
-                label=f"Your current balance is Php {_fmt(session.new_balance)}. Press any key to continue...",
-            ), []
+                label=f"Your current balance is Php {_fmt(session.balance)}. Press any key to continue...",
+            ), [],
+            )
         if v.startswith("2"):
             session.state = "CHECK_INVENTORY"
             return [], InputConfig(
@@ -235,6 +222,19 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
             ),
             [],
         )
+
+    # ── Check balance return ──────────────────────────────────────────────────
+    if session.state == "CHECK_BALANCE":
+        session.state = "BID_BREAK"
+        return (
+            [],
+            InputConfig(
+                type="choice",
+                label="What would you like to do during the break?",
+                options=_get_break_options(),
+            ),
+            [],
+        ) 
 
     # ── Bid choice ────────────────────────────────────────────────────────────
     if session.state == "BID_CHOICE":
@@ -391,13 +391,14 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                 [],
             )
         if entered == session.half_age:
+            session.balance = session.new_balance 
             session.state = "BID_BREAK"
             return (
                 [
                     "\n\t'Congratulations! You have successfully claimed Item 001 "
                     "and it is now moved into your account inventory.'",
                     "The first bidding ended.",
-                    Message(text="The host announces that the first bidding is now over.", color="#white"),
+                    Message(text="The host announces that the first bidding is now over.", color="white"),
                     Message(
                         text="\t\"We have fifteen minute break before the next bidding starts. "
                         "During this time, you can check your balance and prepare for the next item.\"",
