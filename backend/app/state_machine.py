@@ -357,6 +357,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
         incentive = _calc_incentive(session.my_bid)
         session.new_balance = session.balance - session.my_bid + incentive
         session.state = "VERIFY_AGE"
+
         return (
             [
                 (
