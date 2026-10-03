@@ -101,7 +101,7 @@ export default function App() {
     }
   }
 
-  async function startSession() {
+  async function startSession(skipTo?: string) {
     initiated.current = true
     setDisplayedMessages([])
     setTypingQueue([])
@@ -116,7 +116,7 @@ export default function App() {
 
     setLoading(true)
     try {
-      const resp = await createSession()
+      const resp = await createSession(skipTo)
       applyResponse(resp)
     } catch (e) {
       setError(
@@ -153,7 +153,8 @@ export default function App() {
       loading={loading}
       done={done}
       error={error}
-      onRestart={startSession}
+      onRestart={() => startSession()}
+      onSkip={startSession}
     />
   )
 }

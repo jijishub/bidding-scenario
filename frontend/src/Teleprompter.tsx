@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import StarField from './components/StarField'
 import MessageLog from './components/MessageLog'
 import InputArea from './components/InputArea'
@@ -13,6 +14,7 @@ interface Props {
   done: boolean
   error: string | null
   onRestart: () => void
+  onSkip?: (point?: string) => void
 }
 
 export default function Teleprompter({
@@ -25,7 +27,9 @@ export default function Teleprompter({
   done,
   error,
   onRestart,
+  onSkip,
 }: Props) {
+  const [showSettings, setShowSettings] = useState(false)
   return (
     <div
       style={{
@@ -81,24 +85,110 @@ export default function Teleprompter({
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
-            padding: '14px 20px',
+            justifyContent: 'space-between',
+            padding: '12px 20px',
             borderBottom: '1px solid rgba(6,182,212,0.12)',
+            position: 'relative',
           }}
         >
-          <Dot color="#ef4444" />
-          <Dot color="#f59e0b" />
-          <Dot color="#22c55e" />
-          <span
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Dot color="#ef4444" />
+            <Dot color="#f59e0b" />
+            <Dot color="#22c55e" />
+            <span
+              style={{
+                marginLeft: 10,
+                fontSize: 11,
+                letterSpacing: '0.1em',
+                color: 'rgba(6,182,212,0.4)',
+              }}
+            >
+              AUCTION TERMINAL — BIDDING SCENARIO v1.0
+            </span>
+          </div>
+
+          {/* Settings Gear Button */}
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            title="Dev & Testing Fast-Forward"
             style={{
-              marginLeft: 10,
-              fontSize: 11,
-              letterSpacing: '0.1em',
-              color: 'rgba(6,182,212,0.4)',
+              background: showSettings ? 'rgba(6,182,212,0.2)' : 'transparent',
+              border: '1px solid rgba(6,182,212,0.3)',
+              borderRadius: 6,
+              color: '#67e8f9',
+              cursor: 'pointer',
+              padding: '3px 8px',
+              fontSize: 12,
+              fontFamily: 'inherit',
+              transition: 'all 0.15s',
             }}
           >
-            AUCTION TERMINAL — BIDDING SCENARIO v1.0
-          </span>
+            ⚙ DEV
+          </button>
+
+          {/* Dev Skipping Popover */}
+          {showSettings && (
+            <div
+              style={{
+                position: 'absolute',
+                top: 48,
+                right: 20,
+                zIndex: 50,
+                width: 250,
+                background: 'rgba(6, 12, 28, 0.95)',
+                border: '1px solid rgba(6,182,212,0.4)',
+                borderRadius: 12,
+                boxShadow: '0 16px 40px rgba(0,0,0,0.8)',
+                backdropFilter: 'blur(16px)',
+                padding: '12px 14px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+              }}
+            >
+              <div style={{ fontSize: 10, color: 'rgba(6,182,212,0.7)', letterSpacing: '0.05em' }}>
+                TEST CREDENTIALS: AGE 22 (CLAIM: 11)
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {[
+                  { label: '⚡ Bid Choice', point: 'BID_CHOICE' },
+                  { label: '⚡ Bidding Duel', point: 'BIDDING' },
+                  { label: '⚡ Claim Item (Code 11)', point: 'VERIFY_AGE' },
+                  { label: '⚡ Break Room (Win)', point: 'BID_BREAK_WIN' },
+                  { label: '⚡ Break Room (Loss)', point: 'BID_BREAK_LOSS' },
+                  { label: '🔄 Normal Start', point: undefined },
+                ].map((item, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      setShowSettings(false)
+                      onSkip?.(item.point)
+                    }}
+                    style={{
+                      textAlign: 'left',
+                      padding: '6px 10px',
+                      borderRadius: 6,
+                      fontSize: 11,
+                      fontFamily: 'inherit',
+                      background: 'rgba(6,182,212,0.06)',
+                      border: '1px solid rgba(6,182,212,0.2)',
+                      color: item.point ? '#67e8f9' : '#94a3b8',
+                      cursor: 'pointer',
+                      transition: 'all 0.1s',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(6,182,212,0.18)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(6,182,212,0.06)'
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Message viewport */}

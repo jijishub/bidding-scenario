@@ -1,6 +1,6 @@
-```This is the only file I'll use for LLM context. Do not delete this line and file.```
+```This is the only file I'll use for LLM context  and feedbacks. Do not delete this line and file.
+LLMs should auto-update and polish plot.txt
 
-Start:
 1. plot.txt - to document the plot. Update it every iteration.
 
 As you can see, I use this pet project to practice my coding skills, particularly Python.
@@ -8,3 +8,8 @@ I want LLMs to answer my queries, help me debug, and teach me how to code proper
 executing the code themselves.
 This pet project is an open project that continously would get iterated as I learn to code,
 expand my system architecture concepts, and more. 
+Help me code with modern strategies and efficiently so I learn practical and modern coding knowledge.
+```
+
+Start:
+1. 

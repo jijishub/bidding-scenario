@@ -6,8 +6,9 @@ const BASE_URL =
 
 const client = axios.create({ baseURL: BASE_URL })
 
-export async function createSession(): Promise<StepResponse> {
-  const { data } = await client.post<StepResponse>('/session')
+export async function createSession(skipTo?: string): Promise<StepResponse> {
+  const url = skipTo ? `/session?skip_to=${skipTo}` : '/session'
+  const { data } = await client.post<StepResponse>(url)
   return data
 }
 

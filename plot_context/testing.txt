@@ -1,0 +1,86 @@
+BIDDING SCENARIO — TESTING & SKIPPING POINTS REFERENCE
+======================================================
+
+PURPOSE
+-------
+This document tracks development fast-forward points ("skipping points") and 
+standardized test credentials to quickly jump to any game phase (bidding, 
+verification, break room, future chapters) without manually replaying intake.
+
+
+DEFAULT TEST CREDENTIALS
+------------------------
+Hardcoded test credentials used across test runs:
+- Name: "Phoenix"
+- Age: 22
+- Verification / Claiming Code (half_age): 11
+- Alive: True
+- Starting Balance: Php 100,000
+
+
+AVAILABLE SKIPPING POINTS
+-------------------------
+
+[Chapter 1: The Golden Tumbler]
+
+1. SKIP_POINT = "INTAKE_COMPLETE"
+   - Skips: Name, Age, and Alive questions.
+   - Lands on: Hologram screen intro & Item 001 announcement.
+   - Session State: STORY_PAUSE_1 / STORY_PAUSE_2
+
+2. SKIP_POINT = "BID_CHOICE"
+   - Skips: Intro narrative.
+   - Lands on: "Do you want to bid for the item?" (Yes/No choice).
+   - Session State: BID_CHOICE
+
+3. SKIP_POINT = "BIDDING"
+   - Skips: Initial choice.
+   - Lands on: First player bid input prompt.
+   - Session State: BIDDING (item_price = 50,000)
+
+4. SKIP_POINT = "VERIFY_AGE"
+   - Skips: The entire bidding duel.
+   - Simulates: Player won with a winning bid of 95,000.
+   - Balance: Pre-calculated to 100,000 - 95,000 + 40,000 = 45,000.
+   - Lands on: Age verification prompt (enter 11 to claim Item 001).
+   - Session State: VERIFY_AGE
+
+5. SKIP_POINT = "BID_BREAK_WIN"
+   - Skips: Winning auction + age verification.
+   - Simulates: Player successfully claimed Item 001 (balance = 45,000).
+   - Lands on: Chapter 1 Break Menu (Check balance / Check inventory / Continue).
+   - Session State: BID_BREAK
+
+6. SKIP_POINT = "BID_BREAK_LOSS"
+   - Skips: Folding + consolation narrative.
+   - Simulates: Player passed/folded, received Php 20,000 consolation (balance = 120,000).
+   - Lands on: Chapter 1 Break Menu (Check balance / Check inventory / Continue).
+   - Session State: BID_BREAK
+
+
+[Chapter 2: Future Items (WIP)]
+
+7. SKIP_POINT = "CHAPTER_2_START"
+   - Lands on: Item 002 intro and showcase.
+
+8. SKIP_POINT = "CHAPTER_2_BID"
+   - Lands on: Item 002 active bidding loop with upgraded rival.
+
+
+IMPLEMENTATION IN state_machine.py
+----------------------------------
+To activate a skipping point, set the top-level flag in `backend/app/state_machine.py`:
+
+    # In state_machine.py
+    TEST_CREDENTIALS = {
+        "name": "Phoenix",
+        "age": 22.0,
+        "half_age": 11.0,
+        "alive": True,
+    }
+
+    # Set to any key above (e.g., "BID_BREAK_WIN"), or None for normal play:
+    SKIP_TO = "BID_BREAK_WIN"
+
+Alternatively, at the opening "Type your name:" prompt, typing `skip:<point>`
+(e.g., `skip:break` or `skip:win`) can trigger the fast-forward on the fly.

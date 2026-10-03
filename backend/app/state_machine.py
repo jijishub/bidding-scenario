@@ -20,7 +20,6 @@ NAME_PATTERN = re.compile(r"^[A-Za-z\s-]+$")
 
 INVENTORY=False
 
-
 @dataclass
 class SessionData:
     id: str
@@ -60,6 +59,41 @@ def _get_break_options() -> List[str]:
         if INVENTORY
         else ["1 — Check balance", "0 — Continue"]
     )
+
+
+# ── Input Config Factories (Single Source of Truth) ───────────────────────────
+
+def get_bid_choice_input() -> InputConfig:
+    return InputConfig(
+        type="choice",
+        label="Do you want to bid for the item?",
+        options=["1 — Yes, I want to bid", "0 — No, skip this item"],
+    )
+
+
+def get_bidding_input(session: SessionData) -> InputConfig:
+    return InputConfig(
+        type="number",
+        label="Enter your Bid, or type 0 to stop bidding:",
+        placeholder=f"Must exceed {_fmt(session.item_price)}",
+    )
+
+
+def get_verify_age_input(session: SessionData) -> InputConfig:
+    return InputConfig(
+        type="number",
+        label=f"UserName: @Phoenix  ·  Verification — Enter your age:",
+        placeholder="Your age...",
+    )
+
+
+def get_break_input() -> InputConfig:
+    return InputConfig(
+        type="choice",
+        label="What would you like to do during the break?",
+        options=_get_break_options(),
+    )
+
 
 def start_session(session: SessionData) -> Tuple[List[str], InputConfig]:
     """Called once when a session is created. Returns intro messages + first input."""
