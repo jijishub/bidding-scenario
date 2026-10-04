@@ -80,18 +80,20 @@ export default function InputArea({ config, onSubmit, loading, onRestart }: Prop
         option.startsWith('false') || option.startsWith('no') || option.startsWith('0')
       )
 
-      if (e.key === '1') {
-        index = positiveIndex >= 0 && negativeIndex >= 0 ? positiveIndex : 1
-      } else if (e.key === '0') {
-        index = positiveIndex >= 0 && negativeIndex >= 0 ? negativeIndex : 0
-      } else if (e.key === '2') index = 2
-      else if (e.key === '3') index = 3
-      else if (e.key === '4') index = 4
-      else if (e.key === '5') index = 5
-      else if (e.key === '6') index = 6
-      else if (e.key === '7') index = 7
-      else if (e.key === '8') index = 8
-      else if (e.key === '9') index = 9
+      // 1. Direct match: does any option start with the pressed digit (e.g. '1', '2', '0')?
+      const directMatchIndex = options.findIndex(opt => opt.trim().startsWith(e.key))
+      if (directMatchIndex >= 0) {
+        e.preventDefault()
+        onSubmit(options[directMatchIndex])
+        return
+      }
+
+      // 2. Semantic fallback for boolean choices
+      if (e.key === '1' && positiveIndex >= 0) {
+        index = positiveIndex
+      } else if (e.key === '0' && negativeIndex >= 0) {
+        index = negativeIndex
+      }
 
       if (index >= 0 && index < options.length) {
         e.preventDefault()

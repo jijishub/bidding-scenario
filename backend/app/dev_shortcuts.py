@@ -8,8 +8,8 @@ from __future__ import annotations
 from typing import List, Tuple, Union
 
 from .models import InputConfig, Message
-from .state_machine import (
-    SessionData,
+from .state_machine import SessionData
+from .functions import (
     _calc_incentive,
     _fmt,
     get_bid_choice_input,
@@ -39,21 +39,23 @@ def apply_skip_point(
 
     if point == "BIDDING":
         session.state = "BIDDING"
-        return [f"[DEV] Jumped to BIDDING (Starting bid: Php {_fmt(session.item_price)})."], get_bidding_input(session)
+        return [f"[DEV] Jumped to BIDDING (Starting bid: Php {_fmt(session.item_price)})."], get_bidding_input(session.item_price)
 
     if point == "VERIFY_AGE":
         session.my_bid = 95_000.0
         session.item_price = 95_000.0
         session.new_balance = session.balance - session.my_bid + _calc_incentive(session.my_bid)
         session.state = "VERIFY_AGE"
-        return [f"[DEV] Jumped to VERIFY_AGE (Winning bid: Php 95,000)."], get_verify_age_input(session)
+        return [f"[DEV] Jumped to VERIFY_AGE (Winning bid: Php 95,000)."], get_verify_age_input(session.name)
 
     if point == "BID_BREAK_LOSS":
         session.balance = 120_000.0
+        session.inventory = ""
         session.state = "BID_BREAK"
         return [f"[DEV] Jumped to Break Room (Consolation: Php {_fmt(session.balance)})."], get_break_input()
 
     # Default fallback: "BID_BREAK_WIN"
     session.balance = 45_000.0
+    session.inventory = "0001"
     session.state = "BID_BREAK"
     return [f"[DEV] Jumped to Break Room (Won Item 001: Php {_fmt(session.balance)})."], get_break_input()

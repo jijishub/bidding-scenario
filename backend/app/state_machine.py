@@ -5,6 +5,17 @@ from dataclasses import dataclass
 from typing import List, Tuple, Union
 
 from .models import InputConfig, Message, MessagePart
+from .inventories import render_inventory_messages
+from .functions import (
+    _fmt,
+    _calc_incentive,
+    _get_break_options,
+    get_bid_choice_input,
+    get_bidding_input,
+    get_verify_age_input,
+    get_break_input,
+    continue_choice_input,
+)
 
 STARTING_BID = 50_000.0
 STARTING_MONEY = 100_000.0
@@ -18,7 +29,6 @@ COMPETITOR_NAME2 = "@Viper"  # Table 3388
 
 NAME_PATTERN = re.compile(r"^[A-Za-z\s-]+$")
 
-INVENTORY=False
 
 @dataclass
 class SessionData:
@@ -35,64 +45,7 @@ class SessionData:
     counter_count: int = 0
     last_counterer: str = COMPETITOR_NAME2
     last_counterer_table: str = "3388"
-
-
-def _fmt(n: float) -> str:
-    return f"{int(n):,}" if n == int(n) else f"{n:,.2f}"
-
-
-def _calc_incentive(winning_bid: float) -> float:
-    """Tiered incentive: the higher the winning bid, the greater the reward."""
-    if winning_bid <= 65_000:
-        return 10_000.0
-    elif winning_bid <= 80_000:
-        return 20_000.0
-    elif winning_bid <= 90_000:
-        return 30_000.0
-    else:
-        return 40_000.0
-
-def _get_break_options() -> List[str]:
-    """Returns available break options depending on whether inventory is enabled."""
-    return (
-        ["1 — Check balance", "2 — Check inventory", "0 — Continue"]
-        if INVENTORY
-        else ["1 — Check balance", "0 — Continue"]
-    )
-
-
-# ── Input Config Factories (Single Source of Truth) ───────────────────────────
-
-def get_bid_choice_input() -> InputConfig:
-    return InputConfig(
-        type="choice",
-        label="Do you want to bid for the item?",
-        options=["1 — Yes, I want to bid", "0 — No, skip this item"],
-    )
-
-
-def get_bidding_input(session: SessionData) -> InputConfig:
-    return InputConfig(
-        type="number",
-        label="Enter your Bid, or type 0 to stop bidding:",
-        placeholder=f"Must exceed {_fmt(session.item_price)}",
-    )
-
-
-def get_verify_age_input(session: SessionData) -> InputConfig:
-    return InputConfig(
-        type="number",
-        label=f"UserName: @Phoenix  ·  Verification — Enter your age:",
-        placeholder="Your age...",
-    )
-
-
-def get_break_input() -> InputConfig:
-    return InputConfig(
-        type="choice",
-        label="What would you like to do during the break?",
-        options=_get_break_options(),
-    )
+    inventory: str = ""  # Comma-separated list of item IDs (e.g. "0001")
 
 
 def start_session(session: SessionData) -> Tuple[List[str], InputConfig]:
@@ -162,7 +115,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                     f"you will use half your age, you are now {_fmt(session.half_age)}."
                 ),
             ],
-            InputConfig(type="continue", label="Press any key to proceed..."),
+            continue_choice_input(),
             [],
         )
 
@@ -188,7 +141,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                     ],
                 ),
             ],
-            InputConfig(type="continue", label="Press any key to proceed..."),
+            continue_choice_input(),
             ["play_beep_3x"],
         )
 
@@ -215,79 +168,73 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                     "on the side of the tumbler. 'Aquaflask', it says. The item ID is 0001."
                 ),
             ],
-            InputConfig(
-                type="choice",
-                label="Do you want to bid for the item?",
-                options=["1 — Yes, I want to bid", "0 — No, skip this item"],
-            ),
-            [],
-        )
-    
-    #Inventory checker
-    if session.state == "BID_BREAK":
-        if v.startswith("1"):
-            session.state = "CHECK_BALANCE"
-            return (
-                [
-                Message(text=f"\t'Your current balance is Php {_fmt(session.balance)}.'", color="#67e8f9",)
-            ], InputConfig(
-                type="continue",
-                label=f"Your current balance is Php {_fmt(session.balance)}. Press any key to continue...",
-            ), [],
-            )
-        if v.startswith("2"):
-            session.state = "CHECK_INVENTORY"
-            return [], InputConfig(
-                type="continue",
-                label="Checking your inventory. Press any key to continue...",
-            ), []
-        if v.startswith("0"):
-            session.state = "STORY_PAUSE_4"
-            return [], InputConfig(
-                type="continue",
-                label="You chose to continue without checking your balance. Press any key to proceed...",
-            ), []
-        return (
-            ["Please select 1 (Check balance), 2 (Check inventory), or 0 (Continue)."],
-            InputConfig(
-                type="choice",
-                label="What would you like to do during the break?",
-                options=["1 — Check balance", "2 — Check inventory", "0 — Continue"],
-            ),
+            get_bid_choice_input(),
             [],
         )
 
-    # ── Check balance return ──────────────────────────────────────────────────
+    # ── Break Menu (In-place inspection, no redundant state switches) ──────────
+    if session.state == "BID_BREAK":
+        if v.startswith("1"):
+            return (
+                [
+                    Message(
+                        text=f"\t'Account Balance: Php {_fmt(session.balance)}.'",
+                        color="#67e8f9",
+                    )
+                ],
+                get_break_input(),
+                [],
+            )
+        if v.startswith("2"):
+            return (
+                render_inventory_messages(session.inventory),
+                get_break_input(),
+                [],
+            )
+        if v.startswith("0"):
+            session.state = "STORY_PAUSE_4"
+            return (
+                [],
+                continue_choice_input("You chose to continue without checking your balance. Press any key to proceed..."),
+                [],
+            )
+        return (
+            ["Please select 1 (Check balance), 2 (Check inventory), or 0 (Continue)."],
+            get_break_input(),
+            [],
+        )
+
     if session.state == "CHECK_BALANCE":
         session.state = "BID_BREAK"
         return (
+            [
+                Message(
+                    text=f"\t'Account Balance: Php {_fmt(session.balance)}.'",
+                    color="#67e8f9",
+                )
+            ],
+            get_break_input(),
             [],
-            InputConfig(
-                type="choice",
-                label="What would you like to do during the break?",
-                options=_get_break_options(),
-            ),
+        )
+
+    if session.state == "CHECK_INVENTORY":
+        session.state = "BID_BREAK"
+        return (
+            render_inventory_messages(session.inventory),
+            get_break_input(),
             [],
-        ) 
+        )
 
     # ── Bid choice ────────────────────────────────────────────────────────────
     if session.state == "BID_CHOICE":
         if v.startswith("1"):
             session.state = "BIDDING"
-            return [], InputConfig(
-                type="number",
-                label="Enter your Bid, or type 0 to stop bidding:",
-                placeholder=f"Must exceed {_fmt(session.item_price)}",
-            ), []
+            return [], get_bidding_input(session.item_price), []
         if v.startswith("0"):
             return _loss_outcome(session)
         return (
             ["Please select 1 (Yes) or 0 (No)."],
-            InputConfig(
-                type="choice",
-                label="Do you want to bid for the item?",
-                options=["1 — Yes, I want to bid", "0 — No, skip this item"],
-            ),
+            get_bid_choice_input(),
             [],
         )
 
@@ -298,11 +245,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
         except ValueError:
             return (
                 ["Invalid input. Please enter a number."],
-                InputConfig(
-                    type="number",
-                    label="Enter your Bid, or type 0 to stop bidding:",
-                    placeholder=f"Must exceed {_fmt(session.item_price)}",
-                ),
+                get_bidding_input(session.item_price),
                 [],
             )
 
@@ -312,22 +255,14 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
         if bid <= session.item_price:
             return (
                 [f"\t'Your bid must be higher than Php {_fmt(session.item_price)} (Current highest bid).'"],
-                InputConfig(
-                    type="number",
-                    label="Enter your Bid, or type 0 to stop bidding:",
-                    placeholder=f"Must exceed {_fmt(session.item_price)}",
-                ),
+                get_bidding_input(session.item_price),
                 [],
             )
 
         if bid > session.balance:
             return (
                 [f"\t'You cannot bid more than what you have. Your balance is Php {_fmt(session.balance)}.'"],
-                InputConfig(
-                    type="number",
-                    label="Enter your Bid, or type 0 to stop bidding:",
-                    placeholder=f"Must exceed {_fmt(session.item_price)}",
-                ),
+                get_bidding_input(session.item_price),
                 [],
             )
 
@@ -356,11 +291,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                         f"You are no longer the highest bidder."
                     ),
                 ],
-                InputConfig(
-                    type="number",
-                    label="Enter your Bid, or type 0 to stop bidding:",
-                    placeholder=f"Must exceed {_fmt(session.item_price)}",
-                ),
+                get_bidding_input(session.item_price),
                 [],
             )
 
@@ -382,7 +313,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                 ),
                 "You are the highest bidder. The System announced it to everyone.",
             ],
-            InputConfig(type="continue", label="Press any key to proceed..."),
+            continue_choice_input(),
             [],
         )
 
@@ -406,11 +337,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                     f"transfer to your account. For verification, please type your age below.'"
                 ),
             ],
-            InputConfig(
-                type="number",
-                label="UserName: @Phoenix  ·  Verification — Enter your age:",
-                placeholder="Your age...",
-            ),
+            get_verify_age_input(session.name),
             [],
         )
 
@@ -421,11 +348,12 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
         except ValueError:
             return (
                 ["Invalid input. Please enter a number."],
-                InputConfig(type="number", label="Verification — Enter your age:", placeholder="Your age..."),
+                get_verify_age_input(session.name),
                 [],
             )
         if entered == session.half_age:
             session.balance = session.new_balance 
+            session.inventory = "0001"  # Claim Item 0001 into inventory
             session.state = "BID_BREAK"
             return (
                 [
@@ -444,16 +372,12 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                         color="#67e8f9",
                     ),
                 ],
-                InputConfig(
-                    type="choice",
-                    label="What would you like to do during the break?",
-                    options=["1 — Check balance", "2 — Check inventory", "0 — Continue"],
-                ),
+                get_break_input(),
                 ["play_beep_3x"],
             )
         return (
-            ["You are not ineligible to claim the item."],
-            InputConfig(type="number", label="Verification — Enter your age:", placeholder="Your age..."),
+            ["You are not eligible to claim the item."],
+            get_verify_age_input(session.name),
             [],
         )
 
@@ -479,11 +403,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                     color="#67e8f9",
                 ),
             ],
-            InputConfig(
-                type="choice",
-                label="What would you like to do during the break?",
-                options=["1 — Check balance", "2 — Check inventory", "0 — Continue"],
-            ),
+            get_break_input(),
             [],
         )
 
@@ -518,6 +438,6 @@ def _loss_outcome(session: SessionData) -> Tuple[List[Union[str, Message]], Inpu
             ),
             "Consequently you receive another message from your screen.",
         ],
-        InputConfig(type="continue", label="Press any key to proceed..."),
+        continue_choice_input(),
         [],
     )

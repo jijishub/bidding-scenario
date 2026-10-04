@@ -91,8 +91,10 @@ OPTION MAP (what each choice actually does, for quick reference)
                               (90,000 + 5,000 = must bid ≥ 90,001-ish to
                               guarantee the win, since 90,000 is the rivals'
                               max counter capacity).
-- Break: Check balance      → shows current balance in the terminal and returns
-                              cleanly back to the break menu options.
+- Break: Check balance      → shows current balance directly in-place in the terminal;
+                              keeps break menu active (no redundant state change).
+- Break: Check inventory    → displays acquired items catalog list in-place in the
+                              terminal; keeps break menu active (no redundant state change).
 - Break: Check inventory    → placeholder screen, no items rendered yet.
 - Break: Continue           → intended to move to next item; currently
                               dead-ends (no Chapter 2 built yet).

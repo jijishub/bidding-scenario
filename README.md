@@ -1,6 +1,6 @@
 # BiddingScenario
 
-> 🚧 **Work in progress.** Story beat 1 is playable end-to-end; later chapters, inventory, and a few other threads listed in `plot_context/plot.txt` are still unbuilt. Expect breaking changes while this is actively developed.
+> 🚧 **Work in progress.** Chapter 1 and its break room / inventory inspection are playable end-to-end; later chapters and remaining narrative threads listed in `plot_context/plot.txt` are still unbuilt. Expect breaking changes while this is actively developed.
 
 A sci-fi auction simulation ported from a personal C# console exercise into a decoupled web app. The backend runs a strict state-machine replica of the original bidding logic; the frontend renders it as a glassmorphism terminal with a character-by-character typing effect.
 
@@ -143,7 +143,7 @@ To streamline testing without manually re-typing intake credentials every run:
   - ⚡ **Bid Choice** (Skip intake prologue)
   - ⚡ **Bidding Duel** (Jump straight into the active auction)
   - ⚡ **Claim Item (Code 11)** (Jump to verification prompt)
-  - ⚡ **Break Room (Win)** (Balance = Php 45,000)
+  - ⚡ **Break Room (Win)** (Balance = Php 45,000, Item 0001 in inventory)
   - ⚡ **Break Room (Loss)** (Balance = Php 120,000)
   - 🔄 **Normal Start** (Reset to prologue)
 - **Standardized Test Credentials**: Name: `Phoenix`, Age: `22.0`, Verification code (`half_age`): `11.0`, Alive: `True`.

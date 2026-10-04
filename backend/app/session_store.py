@@ -44,7 +44,8 @@ def init_db() -> None:
                 new_balance          REAL    NOT NULL DEFAULT 0,
                 counter_count        INTEGER NOT NULL DEFAULT 0,
                 last_counterer       TEXT    NOT NULL DEFAULT '@Viper',
-                last_counterer_table TEXT    NOT NULL DEFAULT '3388'
+                last_counterer_table TEXT    NOT NULL DEFAULT '3388',
+                inventory            TEXT    NOT NULL DEFAULT ''
             )
         """)
         c.commit()
@@ -55,6 +56,7 @@ def init_db() -> None:
             "counter_count": "INTEGER NOT NULL DEFAULT 0",
             "last_counterer": "TEXT NOT NULL DEFAULT '@Viper'",
             "last_counterer_table": "TEXT NOT NULL DEFAULT '3388'",
+            "inventory": "TEXT NOT NULL DEFAULT ''",
         }.items():
             if col not in existing_cols:
                 c.execute(f"ALTER TABLE sessions ADD COLUMN {col} {decl}")
@@ -67,14 +69,14 @@ def save_session(s: SessionData) -> None:
             """
             INSERT OR REPLACE INTO sessions
                 (id, state, name, age, half_age, alive, balance, item_price, my_bid, new_balance,
-                 counter_count, last_counterer, last_counterer_table)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 counter_count, last_counterer, last_counterer_table, inventory)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 s.id, s.state, s.name, s.age, s.half_age,
                 1 if s.alive else 0,
                 s.balance, s.item_price, s.my_bid, s.new_balance,
-                s.counter_count, s.last_counterer, s.last_counterer_table,
+                s.counter_count, s.last_counterer, s.last_counterer_table, s.inventory
             ),
         )
         c.commit()
@@ -99,4 +101,5 @@ def load_session(session_id: str) -> Optional[SessionData]:
         counter_count=row["counter_count"],
         last_counterer=row["last_counterer"],
         last_counterer_table=row["last_counterer_table"],
+        inventory=row["inventory"] if "inventory" in row.keys() else "",
     )
