@@ -16,11 +16,13 @@ export interface InputConfig {
 export interface MessagePart {
   text: string
   color?: string
+  italic?: boolean
 }
 
 export interface Message {
   text: string
   color?: string
+  italic?: boolean
   parts?: MessagePart[]
 }
 

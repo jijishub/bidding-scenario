@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
-import type { MessagePart } from '../types'
+import type { Message, MessagePart } from '../types'
 
 interface Props {
-  messages: (string | { text: string; color?: string; parts?: MessagePart[] })[]
+  messages: (string | Message)[]
   currentlyTyping: string | null
+  currentlyTypingColor?: string
   onTypingComplete: (msg: string) => void
 }
 
@@ -12,6 +13,50 @@ const FAST_CHAR_MS = 20
 const PAUSE_MS = 100
 
 type Kind = 'system' | 'error' | 'dialog' | 'narrative'
+
+/**
+ * Maps friendly color names (e.g. "teal") to app hex codes or CSS variables.
+ * Allows backend authors to write `color="teal"` directly.
+ */
+export const NAMED_COLORS: Record<string, string> = {
+  teal: '#67e8f9',
+  cyan: '#67e8f9',
+  white: '#ffffff',
+  purple: 'var(--teleprompter-purple)',
+  red: 'var(--teleprompter-red)',
+}
+
+export function resolveColor(color?: string): string | undefined {
+  if (!color) return undefined
+  const key = color.toLowerCase().trim()
+  return NAMED_COLORS[key] || color
+}
+
+/**
+ * Parses markdown asterisks (*italic*) or <i>italic</i> tags into styled italic spans.
+ */
+export function renderFormattedText(text: string): React.ReactNode {
+  if (!text.includes('*') && !text.includes('<i>')) return text
+
+  const tokens = text.split(/(\*[^*]+\*|<i>.*?<\/i>)/g)
+  return tokens.map((seg, idx) => {
+    if (seg.startsWith('*') && seg.endsWith('*') && seg.length > 2) {
+      return (
+        <span key={idx} style={{ fontStyle: 'italic' }}>
+          {seg.slice(1, -1)}
+        </span>
+      )
+    }
+    if (seg.startsWith('<i>') && seg.endsWith('</i>')) {
+      return (
+        <span key={idx} style={{ fontStyle: 'italic' }}>
+          {seg.slice(3, -4)}
+        </span>
+      )
+    }
+    return seg
+  })
+}
 
 function classify(text: string): Kind {
   if (text.includes('System:') || text.includes('Congratulations!')) return 'system'
@@ -39,16 +84,20 @@ function MessageLine({
   text,
   cursor = false,
   color,
+  italic,
   parts,
 }: {
   text: string
   cursor?: boolean
   color?: string
+  italic?: boolean
   parts?: MessagePart[]
 }) {
   const kind = classify(text)
+  const resolvedColor = resolveColor(color)
   const baseStyle: React.CSSProperties = {
-    color: color || COLOR[kind],
+    color: resolvedColor || COLOR[kind],
+    fontStyle: italic ? 'italic' : undefined,
     whiteSpace: 'pre-wrap',
     wordBreak: 'break-word',
     fontSize: 13,
@@ -59,7 +108,19 @@ function MessageLine({
 
   return (
     <p style={baseStyle}>
-      {parts ? parts.map((p, i) => <span key={i} style={{ color: p.color }}>{p.text}</span>) : text}
+      {parts
+        ? parts.map((p, i) => (
+            <span
+              key={i}
+              style={{
+                color: resolveColor(p.color),
+                fontStyle: p.italic ? 'italic' : undefined,
+              }}
+            >
+              {renderFormattedText(p.text)}
+            </span>
+          ))
+        : renderFormattedText(text)}
       {cursor && (
         <span
           style={{
@@ -69,7 +130,7 @@ function MessageLine({
             animationDuration: '1s',
             animationTimingFunction: 'step-end',
             animationIterationCount: 'infinite',
-            color: 'var(--teleprompter-text)',
+            color: resolvedColor || 'var(--teleprompter-text)',
           }}
         >
           ▋
@@ -87,7 +148,7 @@ interface TypingState {
   idx: number
 }
 
-export default function MessageLog({ messages, currentlyTyping, onTypingComplete }: Props) {
+export default function MessageLog({ messages, currentlyTyping, currentlyTypingColor, onTypingComplete }: Props) {
   const [typedText, setTypedText] = useState('')
   const [typingState, setTypingState] = useState<TypingState | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -130,10 +191,11 @@ export default function MessageLog({ messages, currentlyTyping, onTypingComplete
       {messages.map((msg, i) => {
         const text = typeof msg === 'string' ? msg : msg.text
         const color = typeof msg === 'string' ? undefined : msg.color
+        const italic = typeof msg === 'string' ? undefined : msg.italic
         const parts = typeof msg === 'string' ? undefined : msg.parts
-        return <MessageLine key={i} text={text} color={color} parts={parts} />
+        return <MessageLine key={i} text={text} color={color} italic={italic} parts={parts} />
       })}
-      {currentlyTyping !== null && <MessageLine text={typedText} cursor />}
+      {currentlyTyping !== null && <MessageLine text={typedText} color={currentlyTypingColor} cursor />}
       <div ref={bottomRef} />
     </div>
   )

@@ -82,6 +82,27 @@ export default function App() {
         setTimeout(() => playBeep(), i * 400)
       }
     }
+
+    if (actions.includes('play_chime')) {
+      // Elegant sci-fi announcement chime: E5 (659Hz) into B5 (988Hz) with soft decay
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+      const playBellTone = (freq: number, startDelay: number, duration: number) => {
+        setTimeout(() => {
+          const osc = audioContext.createOscillator()
+          const gain = audioContext.createGain()
+          osc.connect(gain)
+          gain.connect(audioContext.destination)
+          osc.type = 'sine'
+          osc.frequency.setValueAtTime(freq, audioContext.currentTime)
+          gain.gain.setValueAtTime(0.25, audioContext.currentTime)
+          gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration)
+          osc.start(audioContext.currentTime)
+          osc.stop(audioContext.currentTime + duration)
+        }, startDelay)
+      }
+      playBellTone(659.25, 0, 1.2)   // E5 tone
+      playBellTone(987.77, 200, 1.6) // B5 tone
+    }
   }, [actions])
 
   function applyResponse(resp: StepResponse) {
@@ -143,10 +164,16 @@ export default function App() {
     }
   }
 
+  const currentlyTypingColor =
+    currentMessageObj.current && typeof currentMessageObj.current !== 'string'
+      ? currentMessageObj.current.color
+      : undefined
+
   return (
     <Teleprompter
       displayedMessages={displayedMessages}
       currentlyTyping={currentlyTyping}
+      currentlyTypingColor={currentlyTypingColor}
       onTypingComplete={handleTypingComplete}
       inputConfig={inputActive ? inputConfig : null}
       onInput={handleInput}

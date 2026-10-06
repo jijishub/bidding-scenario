@@ -7,6 +7,7 @@ import type { InputConfig, Message } from './types'
 interface Props {
   displayedMessages: (string | Message)[]
   currentlyTyping: string | null
+  currentlyTypingColor?: string
   onTypingComplete: (msg: string) => void
   inputConfig: InputConfig | null
   onInput: (value: string) => void
@@ -20,6 +21,7 @@ interface Props {
 export default function Teleprompter({
   displayedMessages,
   currentlyTyping,
+  currentlyTypingColor,
   onTypingComplete,
   inputConfig,
   onInput,
@@ -219,6 +221,7 @@ export default function Teleprompter({
             <MessageLog
               messages={displayedMessages}
               currentlyTyping={currentlyTyping}
+              currentlyTypingColor={currentlyTypingColor}
               onTypingComplete={onTypingComplete}
             />
           )}

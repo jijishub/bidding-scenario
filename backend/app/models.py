@@ -15,6 +15,7 @@ class InputConfig(BaseModel):
 class MessagePart(BaseModel):
     text: str
     color: Optional[str] = None
+    italic: Optional[bool] = None
 
 
 class Message(BaseModel):
@@ -22,6 +23,7 @@ class Message(BaseModel):
     or made of multiple differently-colored parts on the same line."""
     text: str = ""
     color: Optional[str] = None
+    italic: Optional[bool] = None
     parts: Optional[List[MessagePart]] = None
 
 

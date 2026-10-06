@@ -6,6 +6,7 @@ from typing import List, Tuple, Union
 
 from .models import InputConfig, Message, MessagePart
 from .inventories import render_inventory_messages
+from .dialogues import get_dialogue
 from .functions import (
     _fmt,
     _calc_incentive,
@@ -129,14 +130,14 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                 Message(
                     text=f"\tThe screen says,'Are you alive? {str(session.alive).lower()}'",
                     parts=[
-                        MessagePart(text="\tThe screen says,", color="#67e8f9"),
+                        MessagePart(text="\tThe screen says,", color="#ffffff"),
                         MessagePart(text=f"'Are you alive? {str(session.alive).lower()}'", color="white"),
                     ],
                 ),
                 Message(
                     text="\n\tA symbol then appeared on the screen: @",
                     parts=[
-                        MessagePart(text="\n\tA symbol then appeared on the screen: ", color="#67e8f9"),
+                        MessagePart(text="\n\tA symbol then appeared on the screen: ", color="#ffffff"),
                         MessagePart(text="@", color="white"),
                     ],
                 ),
@@ -179,7 +180,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                 [
                     Message(
                         text=f"\t'Account Balance: Php {_fmt(session.balance)}.'",
-                        color="#67e8f9",
+                        color="#ffffff",
                     )
                 ],
                 get_break_input(),
@@ -192,15 +193,63 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                 [],
             )
         if v.startswith("0"):
-            session.state = "STORY_PAUSE_4"
+            session.state = "CH2_INTRO"
             return (
-                [],
-                continue_choice_input("You chose to continue without checking your balance. Press any key to proceed..."),
-                [],
+                [
+                    get_dialogue("D201"),
+                    get_dialogue("D202"),
+                    get_dialogue("D203"),
+                ],
+                continue_choice_input("Press any key to proceed..."),
+                ["play_chime"],
             )
         return (
             ["Please select 1 (Check balance), 2 (Check inventory), or 0 (Continue)."],
             get_break_input(),
+            [],
+        )
+
+    # -- Chapter 2: Introduction & Account Balance -----------------------------
+    if session.state == "CH2_INTRO":
+        session.state = "CH2_LORE"
+        messages = [
+            get_dialogue("D204", name=session.name, balance=_fmt(session.balance)),
+        ]
+        return (
+            messages,
+            continue_choice_input("Press any key to proceed..."),
+            [],
+        )
+
+    # -- Chapter 2: Tumbler Reflection & Lore ---------------
+    if session.state == "CH2_LORE":
+        session.state = "CH2_RULES"
+        opt = 1 if "0001" in session.inventory else 2
+        messages = [
+            get_dialogue("D205", option=opt),
+        ]
+        # Conditional lore beat: inspect the tumbler only if acquired in Chapter 1
+        if "0001" in session.inventory:
+            messages.append(get_dialogue("D206"))
+
+        return (
+            messages,
+            continue_choice_input("Press any key to proceed..."),
+            [],
+        )
+
+    # -- Chapter 2: Trifold Auction Rules --------------------------------------
+    if session.state == "CH2_RULES":
+        session.state = "ENDED"
+        return (
+            [
+                get_dialogue("D207"),
+                Message(
+                    text="The stage lights illuminate three pedestal displays. The trifold auction is set to begin.",
+                    color="#ffffff",
+                ),
+            ],
+            InputConfig(type="done", label="Chapter 2 In Progress"),
             [],
         )
 
@@ -210,7 +259,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
             [
                 Message(
                     text=f"\t'Account Balance: Php {_fmt(session.balance)}.'",
-                    color="#67e8f9",
+                    color="#ffffff",
                 )
             ],
             get_break_input(),
@@ -364,12 +413,12 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                     Message(
                         text="\t\"We have fifteen minute break before the next bidding starts. "
                         "During this time, you can check your balance and prepare for the next item.\"",
-                        color="#67e8f9",
+                        color="#ffffff",
                     ),
                     Message(
                         text="\t\"For those who have acquired inventories, please check your hologram "
                         "screen for the items you have won.\", informed the host.",
-                        color="#67e8f9",
+                        color="#ffffff",
                     ),
                 ],
                 get_break_input(),
@@ -395,12 +444,12 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                 Message(
                     text="\t\"We have fifteen minute break before the next bidding starts. "
                     "During this time, you can check your balance and prepare for the next item.\"",
-                    color="#67e8f9",
+                    color="#ffffff",
                 ),
                 Message(
                     text="\t\"For those who have acquired inventories, please check your hologram "
                     "screen for the items you have won.\", informed the host.",
-                    color="#67e8f9",
+                    color="#ffffff",
                 ),
             ],
             get_break_input(),

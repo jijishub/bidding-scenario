@@ -95,19 +95,15 @@ OPTION MAP (what each choice actually does, for quick reference)
                               keeps break menu active (no redundant state change).
 - Break: Check inventory    → displays acquired items catalog list in-place in the
                               terminal; keeps break menu active (no redundant state change).
-- Break: Check inventory    → placeholder screen, no items rendered yet.
-- Break: Continue           → intended to move to next item; currently
-                              dead-ends (no Chapter 2 built yet).
+- Break: Continue           → triggers chime audio, switches to pure white teleprompter/
+                              hologram text, and transitions cleanly into Chapter 2 introduction.
 - Age verification wrong    → soft-locks on the prompt until correct
                               half_age is entered (no penalty, no timeout).
 
 WHERE IT'S GOING (roadmap / open threads, not yet built)
 -----------------------------------------------------------
-- Chapter 2+: a second collection/item needs writing — reuse the same
-  bidding-loop mechanics against a fresh item, starting price, and
-  possibly a different or upgraded rival.
-- Inventory screen currently has no real data behind it — needs to persist
-  and display won items (Item 001 golden tumbler, etc.).
+- Chapter 2: Trifold auction bidding mechanics — implementing the multi-item bidding loop
+  against organizations offering items with hidden defects.
 - "Alive" flag is captured but never used narratively yet — could gate
   future dialogue/branches.
 - Two-rival handoff (@Viper first counter, @SwiftFox after) is in place;
@@ -135,3 +131,24 @@ CHANGE LOG
   to adhere to DRY. Added `dev_shortcuts.py`, `testing.txt`, and frontend
   `⚙ DEV` fast-forward button for instant state jumping with standardized test credentials
   (Age 22, claiming code 11).
+- 2026-10-04 (Dialogue Architecture): Introduced `backend/app/dialogues.py`
+  to store Chapter 2+ dialogue lines indexed by conversation code numbers
+  (e.g. `D201`, `D202`, `D203`), preserving Chapter 1's hardcoded structure
+  in `state_machine.py` while adopting modular dialogue referencing for future chapters.
+- 2026-10-04 (Branching Dialogue Options & Sequential Numbering): Upgraded `dialogues.py` to support
+  multi-option branching under a single dialogue ID. Decoupled the AquaFlask tumbler observation beat
+  into `D205` (Option 1 = winning bidder holding tumbler, Option 2 = losing bidder observing winner),
+  followed sequentially by `D206` (Silicon Era tumbler lore & bottom engraving inspection), and `D207`
+  (trifold auction rules). Both `dialogues.py` and `state_machine.py` reflect strictly ascending
+  numerical ordering (`D201` -> `D207`).
+- 2026-10-04 (Frontend Palette & Named Color Resolver): Added `NAMED_COLORS` resolver
+  in `frontend/src/components/MessageLog.tsx` and `--teleprompter-teal` in `index.css`.
+  Authors can now write `color="teal"` (or `"cyan"`, `"white"`, `"purple"`, `"red"`) directly
+  in Python dialogue definitions (`Message` or `MessagePart`) without needing to remember
+  the signature sci-fi cyan hex code (`#67e8f9`). Also wired real-time typing color inheritance
+  across `App.tsx` and `Teleprompter.tsx`.
+- 2026-10-04 (Italic & Markdown Formatting Support): Added markdown asterisk parsing (`*italic*`)
+  and `<i>` tag support to `MessageLog.tsx`, along with an optional `italic` boolean field on `Message`
+  and `MessagePart` models in both backend and frontend. Allows dialog authors to italicize specific
+  words (such as `D208`: "*caveat emptor* - let the buyer beware.") seamlessly without needing ANSI
+  escape codes.
