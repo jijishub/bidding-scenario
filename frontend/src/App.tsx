@@ -164,16 +164,10 @@ export default function App() {
     }
   }
 
-  const currentlyTypingColor =
-    currentMessageObj.current && typeof currentMessageObj.current !== 'string'
-      ? currentMessageObj.current.color
-      : undefined
-
   return (
     <Teleprompter
       displayedMessages={displayedMessages}
       currentlyTyping={currentlyTyping}
-      currentlyTypingColor={currentlyTypingColor}
       onTypingComplete={handleTypingComplete}
       inputConfig={inputActive ? inputConfig : null}
       onInput={handleInput}

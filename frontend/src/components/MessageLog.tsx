@@ -130,7 +130,7 @@ function MessageLine({
             animationDuration: '1s',
             animationTimingFunction: 'step-end',
             animationIterationCount: 'infinite',
-            color: resolvedColor || 'var(--teleprompter-text)',
+            color: resolvedColor || '#ffffff',
           }}
         >
           ▋
@@ -148,7 +148,12 @@ interface TypingState {
   idx: number
 }
 
-export default function MessageLog({ messages, currentlyTyping, currentlyTypingColor, onTypingComplete }: Props) {
+export default function MessageLog({
+  messages,
+  currentlyTyping,
+  currentlyTypingColor = '#ffffff',
+  onTypingComplete,
+}: Props) {
   const [typedText, setTypedText] = useState('')
   const [typingState, setTypingState] = useState<TypingState | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)

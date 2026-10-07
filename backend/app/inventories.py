@@ -49,7 +49,7 @@ def render_inventory_messages(item_ids_str: str) -> List[Message]:
         ]
 
     messages: List[Message] = [
-        Message(text="\t=== INVENTORY ===", color="#ffffff")
+        Message(text="\t=== INVENTORY ===", color="#67e8f9")
     ]
 
     for index, item_id in enumerate(raw_ids, start=1):

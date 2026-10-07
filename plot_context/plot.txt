@@ -152,3 +152,11 @@ CHANGE LOG
   and `MessagePart` models in both backend and frontend. Allows dialog authors to italicize specific
   words (such as `D208`: "*caveat emptor* - let the buyer beware.") seamlessly without needing ANSI
   escape codes.
+- 2026-10-07 (Typing Writing Color & Teleprompter Palette Separation): Decoupled the live
+  writing/typing animation color from message presentation colors. Restored `--teleprompter-text: #67e8f9`
+  in `frontend/src/index.css` and restored Chapter 1 break/inventory/screen teal accents (`#67e8f9`) in
+  `state_machine.py` and `inventories.py`. The live character-by-character typewriter effect and cursor
+  now write out in pure white (`#ffffff`) across all messages in `MessageLog.tsx`, after which each
+  completed message displays in its authentic defined palette (teal for default narrative & break screens,
+  white for Chapter 2 dialogues, purple for system, and teal for `D208`).
+

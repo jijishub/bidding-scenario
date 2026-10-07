@@ -130,14 +130,14 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                 Message(
                     text=f"\tThe screen says,'Are you alive? {str(session.alive).lower()}'",
                     parts=[
-                        MessagePart(text="\tThe screen says,", color="#ffffff"),
+                        MessagePart(text="\tThe screen says,", color="#67e8f9"),
                         MessagePart(text=f"'Are you alive? {str(session.alive).lower()}'", color="white"),
                     ],
                 ),
                 Message(
                     text="\n\tA symbol then appeared on the screen: @",
                     parts=[
-                        MessagePart(text="\n\tA symbol then appeared on the screen: ", color="#ffffff"),
+                        MessagePart(text="\n\tA symbol then appeared on the screen: ", color="#67e8f9"),
                         MessagePart(text="@", color="white"),
                     ],
                 ),
@@ -180,7 +180,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                 [
                     Message(
                         text=f"\t'Account Balance: Php {_fmt(session.balance)}.'",
-                        color="#ffffff",
+                        color="#67e8f9",
                     )
                 ],
                 get_break_input(),
@@ -259,7 +259,7 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
             [
                 Message(
                     text=f"\t'Account Balance: Php {_fmt(session.balance)}.'",
-                    color="#ffffff",
+                    color="#67e8f9",
                 )
             ],
             get_break_input(),
@@ -413,12 +413,12 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                     Message(
                         text="\t\"We have fifteen minute break before the next bidding starts. "
                         "During this time, you can check your balance and prepare for the next item.\"",
-                        color="#ffffff",
+                        color="#67e8f9",
                     ),
                     Message(
                         text="\t\"For those who have acquired inventories, please check your hologram "
                         "screen for the items you have won.\", informed the host.",
-                        color="#ffffff",
+                        color="#67e8f9",
                     ),
                 ],
                 get_break_input(),
@@ -444,12 +444,12 @@ def process_step(session: SessionData, value: str) -> Tuple[List[Union[str, Mess
                 Message(
                     text="\t\"We have fifteen minute break before the next bidding starts. "
                     "During this time, you can check your balance and prepare for the next item.\"",
-                    color="#ffffff",
+                    color="#67e8f9",
                 ),
                 Message(
                     text="\t\"For those who have acquired inventories, please check your hologram "
                     "screen for the items you have won.\", informed the host.",
-                    color="#ffffff",
+                    color="#67e8f9",
                 ),
             ],
             get_break_input(),
